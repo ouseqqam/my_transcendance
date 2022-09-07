@@ -1,0 +1,117 @@
+/* .flexContainer {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.body {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url('../img/2.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: blur(6px); 
+    opacity: 0.8;
+}
+
+.test {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 400px;
+    height: 600px;
+    z-index: 100;
+    color: white;
+    background-color: rgba(0, 0, 0,0.4);
+    border-radius: 0 5px 5px 0;
+}
+
+.img {
+    width: 400px;
+    height: 600px;
+    z-index: 100;
+    background-image: url('../img/2.jpg');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 18px;
+    border-radius: 5px 0 0 5px;
+}
+
+.btn {
+    background-color: black;
+    border-radius: 10px;
+    color: white;
+    width: 300px;
+    height: 40px;
+}
+
+.txt {
+    width: 200px;
+}
+@media screen and (max-width:816px){
+    .img{
+        display: none;
+        color:red;
+    }
+    .test {
+        height: 100px;
+        background-color: rgba(0, 0, 0,0);
+    }
+} */
+
+.flexContainer {
+    height: 100vh;
+    display: flex;
+}
+
+.auth {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-size: 20px;
+}
+
+.img {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    width: 50%;
+    background-image: url("../img/7.jpg");
+    background-size: cover;
+    background-position: center;
+    color: white;
+}
+
+.btn {
+    width: 50%;
+    height: 40px;
+    background-color: black;
+    color: white;
+    border-radius: 15px;
+    font-size: 20px;
+}
+
+.txt {
+    margin: 50px 20px;
+    border: 2px solid white;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255,0.3);
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.logo {
+    width: 50%;
+    height: 20%;
+    background-color: black;
+    background-image: url("../img/logo.png");
+}
