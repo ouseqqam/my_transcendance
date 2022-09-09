@@ -27,8 +27,6 @@ function Auth() {
             </Head>
             <div className={styles.flexContainer} >
                 <div className={styles.auth}>
-               
-                <Image src={"img/logo.png"} alt="test" width={100} height={100} />
                     <p>Let's get started with authenticate with</p>
                     <p>your</p>
                     <button className={styles.btn} type="submit">42 intra</button>
