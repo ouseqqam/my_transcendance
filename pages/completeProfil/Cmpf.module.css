@@ -5,26 +5,16 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
     background-color: rgb(228, 228, 228);
     background-image: url("../auth/img/7.jpg");
     background-position: center;
     background-size: cover;
 }
 
-.avatar {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background-color: grey;
-    background-position: center;
-    margin-bottom: 30px;
-}
-
 .flexContainer {
     font-size: 22px;
     border-radius: 10px;
-    padding: 5%;
+    padding: 50px;
     width: 700px;
     height: 700px;
     background-color: white;
