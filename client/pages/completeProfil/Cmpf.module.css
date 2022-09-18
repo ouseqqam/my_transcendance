@@ -15,9 +15,7 @@
     border-radius: 10px;
     padding: 50px;
     width: 800px;
-    height: 900px;
     background-color: rgba(255, 255, 255);
-    opacity: 0.9;
 }
 
 .username > input {
@@ -31,12 +29,9 @@
     margin: 20px 0;
 }
 
-.formContainer {
-    width: 100%;
-}
 .nameContainer {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     justify-content: space-between;
     column-gap: 80px;
 }
@@ -63,13 +58,12 @@
     font-size: 18px;
 }
 
-.avatarBtn {
-    background-color: indigo;
-    color: white;
-    padding: 0.5rem;
-    font-family: sans-serif;
-    border-radius: 0.3rem;
-    cursor: pointer;
-    margin-top: 1rem;
-    margin-bottom: 90px;
+.avatar {
+    display: flex;
+    width: 100px;
+}
+
+.plus {
+    position: absolute;
+    bottom: 0;    
 }

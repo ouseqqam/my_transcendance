@@ -2,6 +2,10 @@ import Head from 'next/head'
 import styles from './Cmpf.module.css'
 import { useState } from 'react'
 import axios from 'axios'
+import Image from 'next/image'
+import avatarimg from './images/user.png'
+import plus from './images/plus.png'
+
 
 interface UserData {
     username: string
@@ -21,6 +25,7 @@ function CompleteProfile() {
         birthday: '',
         avatar: ''
     })
+    const [avatar, setAvatar] = useState<any>(avatarimg)
 
     const handleChange = (e: { target: HTMLInputElement; }) => {
         if (e.target.name == "username")
@@ -55,14 +60,15 @@ function CompleteProfile() {
                 <p className={styles.p}>Add your information to complete your profil</p>
                 <div className="formContainer">
                     <form onSubmit={handleSubmit} >
-                        <div>
-                            <input type="file" name="avatar" id="avatar" hidden />
-                            <label htmlFor="avatar">
-                                <img src="https://icons.iconarchive.com/icons/dtafalonso/android-lollipop/128/Downloads-icon.png"/>
+                        <div className={styles.avatar}>
+                            <Image src={avatar}  width={100} height={100} />
+                            <label htmlFor="avatar" className={styles.plus} >
+                                <Image src={plus}  width={20} height={20}  />
                             </label>
+                            <input type="file" name="avatar" id="avatar" hidden />
                         </div>
                         <div className={styles.username} >
-                            <label htmlFor="username">Username</label>
+                            <label htmlFor="username">Username</label><br />
                             <input name='username' type="text" placeholder="Username" onChange={handleChange} />
                         </div>
                         <div className={styles.nameContainer}>
