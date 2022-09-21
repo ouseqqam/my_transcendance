@@ -43,7 +43,7 @@ function CompleteProfile() {
     const handleSubmit = async (e:any) => {
         e.preventDefault()
         try {
-            const data = await axios.post(`http://localhost:3000/api/create`, {data:form})
+            const data = await axios.post(`http://localhost:3001/user/`, {data:form})
             console.log(data.data)
         } catch (error) {
             console.log(error)
