@@ -1,23 +1,20 @@
-import { Controller, ForbiddenException, Get, UseGuards } from '@nestjs/common';
+import { Controller, ForbiddenException, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { AuthService } from './auth.service';
 import { FortyTwoAuthGuard } from './guards';
 
 @Controller('auth')
 export class AuthController {
-    // constructor(private authService: AuthService) {}
+    constructor(private authService: AuthService) {}
     @Get('42')
     @UseGuards(FortyTwoAuthGuard)
-    handleLogin() {
-        return {
-            msg: "hello from 42 Auth"
-        }
-    }
+    auth() {}
+
     @Get('42/callback')
-    handleRedirect() {
-        return {
-            msg: "test "
-        }
+    @UseGuards(FortyTwoAuthGuard)
+    async handleRedirect(@Req() req) {
+        console.log(req.user)
+       return await this.authService.signToken("ouseqqam", "email")
     }
 }
 
