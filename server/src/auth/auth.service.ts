@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { VerifyCallback } from 'passport-42';
 
 @Injectable()
 export class AuthService {
@@ -8,12 +9,8 @@ export class AuthService {
         private jwt: JwtService,
         private config: ConfigService
     ) {}
-
-    async validate(accessToken: string, refreshToken: string, user: any) {
-        this.signToken(user.username, user.email)
-    }
-
-    async signToken(username: string, email: string): Promise<{access_token: string}> {
+    
+    async get42Info(username: string, email: string): Promise<{access_token: string}> {
         const payload = {
             username: username,
             email: email
