@@ -13,7 +13,7 @@ export class AuthController {
     @Get('42/callback')
     @UseGuards(FortyTwoAuthGuard)
     async handleRedirect(@Req() req) {
-        return this.authService.get42Info(req.user.username, req.user.email)
+        return this.authService.get42Info(req.user)
     }
 }
 

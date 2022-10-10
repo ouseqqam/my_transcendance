@@ -8,13 +8,6 @@ import { FileInterceptor } from '@nestjs/platform-express'
 export class UserController {
     constructor(private userService: UserService) {}
 
-    // @Post('/')
-    // @UseGuards(JwtAuthGuard)
-    // create(@Body() user: userDto, @Req() req) {
-    //     console.log(req.user)
-    //     return this.userService.create(user)
-    // }
-
     @Post('/')
     @UseGuards(JwtAuthGuard)
     @UseInterceptors(
@@ -22,11 +15,7 @@ export class UserController {
             dest: './public/uploads',
         })
     )
-    signup(@UploadedFile() file,  @Req() req) {
-        if (file)
-            console.log(file)
-        console.log(req.user)
-        if (req.body.username)
-            console.log(req.body)
+    create(@UploadedFile() file: Express.Multer.File,  @Req() req) {
+        return this.userService.create(file, req)
     }
 }
