@@ -11,7 +11,7 @@ export class UserService {
                 username: dto.username,
                 firstName: dto.firstName,
                 lastName: dto.lastName,
-                avatar: "hello"
+                avatar: "hello",
             }
         })
         return user
