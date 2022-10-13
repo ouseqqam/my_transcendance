@@ -1,6 +1,6 @@
 import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { FortyTwoAuthGuard } from './guards';
+import { FortyTwoAuthGuard } from './guard/42.guards';
 
 @Controller('auth')
 export class AuthController {
@@ -12,8 +12,7 @@ export class AuthController {
     @Get('42/callback')
     @UseGuards(FortyTwoAuthGuard)
     async handleRedirect(@Req() req) {
-        console.log(req.user)
-       return await this.authService.signToken("ouseqqam", "email")
+        return this.authService.get42Info(req.user)
     }
 }
 
