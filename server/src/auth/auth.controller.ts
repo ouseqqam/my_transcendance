@@ -1,5 +1,4 @@
-import { Controller, ForbiddenException, Get, Req, Res, UseGuards } from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { FortyTwoAuthGuard } from './guards';
 

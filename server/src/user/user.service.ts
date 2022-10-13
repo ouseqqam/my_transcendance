@@ -16,4 +16,16 @@ export class UserService {
         })
         return user
     }
+
+    async user() {
+        return await this.prisma.user.findMany();
+    }
+
+    async users(username: string) {
+        return await this.prisma.user.findUnique({
+            where: {
+                username
+            }
+        })
+    }
 }
