@@ -18,5 +18,17 @@ model User {
   lastName String
   email String
   avatar String
+  sender Friend[] @relation("sender")
+  reciver Friend[] @relation("reciver")
+  createdAt DateTime @default(now())
+}
+
+model Friend {
+  id Int @id @default(autoincrement())
+  sender User @relation("sender",fields: [user1], references: [id])
+  user1 Int
+  reciver User @relation("reciver",fields: [user2], references: [id])
+  user2 Int
+  accepted Boolean @default(false)
   createdAt DateTime @default(now())
 }
