@@ -40,5 +40,26 @@ export class FriendService {
         })
     }
     
+    async acceptInv(id1: number, id2: number) {
+        const { id }= await this.prisma.friend.findFirst({
+            select: {
+                id: true,
+            },
+            where: {
+                user1: Number(id1),
+                user2: Number(id2),
+            }
+        })
+        if (!id)
+            return null;
 
+        return await this.prisma.friend.update({
+            where: {
+                id
+            },
+            data: {
+                accepted: true,
+            }
+        })
+    }
 }

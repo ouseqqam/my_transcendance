@@ -18,4 +18,9 @@ export class FriendController {
     getInvSent(@Param('id') id: number) {
         return this.friendService.getInvSent(id);
     }
+
+    @Get('/acceptInv/:id1/:id2')
+    acceptInv(@Param('id1') id1: number, @Param('id2') id2: number) {
+        return this.friendService.acceptInv(id1, id2);
+    }
 }
