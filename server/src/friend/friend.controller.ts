@@ -23,4 +23,10 @@ export class FriendController {
     acceptInv(@Param('id1') id1: number, @Param('id2') id2: number) {
         return this.friendService.acceptInv(id1, id2);
     }
+
+    @Get('getFriends/:id')
+    getFriends(@Param('id') id: number) {
+        return this.friendService.getFriends(id);
+    }
+
 }

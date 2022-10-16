@@ -62,4 +62,28 @@ export class FriendService {
             }
         })
     }
+
+    async getFriends(id: number) {
+        return await this.prisma.user.findMany({
+            where: {
+                OR: [{
+                    sender: {
+                        some: {
+                            accepted: true,
+                            user2: Number(id),
+                        },
+                    }
+                },
+                {
+                reciver: {
+                    some: {
+                        accepted: true,
+                        user1: Number(id),
+                    },
+                }
+                }
+            ]
+            },
+        })
+    }
 }
