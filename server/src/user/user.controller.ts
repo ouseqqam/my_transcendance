@@ -21,7 +21,7 @@ export class UserController {
 
     }
 
-    @Get('/hello')
+    @Get('/get')
     user() {
         return this.userService.user()
     }

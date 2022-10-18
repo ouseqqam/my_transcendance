@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Res } from '@nestjs/common';
 import { InvitationService } from './invitation.service';
 
 @Controller('invitation')
@@ -22,5 +22,10 @@ export class InvitationController {
     @Get('/acceptInv/:id1/:id2')
     acceptInv(@Param('id1') id1: number, @Param('id2') id2: number) {
         return this.invitationSevice.acceptInv(id1, id2);
+    }
+
+    @Get('/deleteInv/:id1/:id2')
+    deleteInv(@Param('id1') id1: number, @Param('id2') id2: number, @Res() res) {
+        return this.invitationSevice.deleteInv(id1, id2, res);
     }
 }

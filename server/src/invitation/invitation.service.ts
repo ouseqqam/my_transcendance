@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Res } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { json } from 'stream/consumers';
 
 @Injectable()
 export class InvitationService {
@@ -41,7 +42,7 @@ export class InvitationService {
     }
     
     async acceptInv(id1: number, id2: number) {
-        const { id }= await this.prisma.friend.findFirst({
+        const id= await this.prisma.friend.findFirst({
             select: {
                 id: true,
             },
@@ -55,10 +56,30 @@ export class InvitationService {
 
         return await this.prisma.friend.update({
             where: {
-                id
+                id: id.id
             },
             data: {
                 accepted: true,
+            }
+        })
+    }
+
+    async deleteInv(id1: number, id2: number, res) {
+        const id= await this.prisma.friend.findFirst({
+            select: {
+                id: true,
+            },
+            where: {
+                user1: Number(id1),
+                user2: Number(id2),
+            }
+        })
+        if (!id)
+            return res.status(404).send("This invitation doesn't exist")
+
+        return await this.prisma.friend.delete({
+            where: {
+                id: id.id
             }
         })
     }
