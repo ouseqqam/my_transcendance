@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { FriendService } from './friend/friend.service';
 import { FriendModule } from './friend/friend.module';
 import { UserService } from './user/user.service';
+import { InvitationModule } from './invitation/invitation.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UserService } from './user/user.service';
     AuthModule,
     PrismaModule,
     FriendModule,
+    InvitationModule,
   ],
   // providers: [UserService, FriendService],
 })
