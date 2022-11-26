@@ -1,0 +1,36 @@
+// to generate the google authenticcator witn nest js first we need to install qrcode 
+// npm install qrcode
+
+// after that we need to import the qrcode in the auth.service.ts file
+
+// import {toDataURL} as QRCode from 'qrcode';
+
+// after that we need to create a function to generate the qrcode
+
+// async generateQRCode(secret: string): Promise<string> {
+//     return await toDataURL(secret);
+// }
+
+// after that we need to create a function to generate the secret
+
+// async generateSecret(): Promise<string> {
+//     return await authenticator.generateSecret();
+// }
+
+// after that we need to create a function to generate the token
+
+// async generateToken(secret: string): Promise<string> {
+//     return await authenticator.generate(secret);
+// }
+
+// after that we need to create a function to verify the token
+
+// async verifyToken(token: string, secret: string): Promise<boolean> {
+//     return await authenticator.verify({ token, secret });
+// }
+
+// after that we need to create a function to generate the url
+
+// async generateURL(name: string, secret: string): Promise<string> {
+//     return await authenticator.keyuri( name, 'NestJS', secret);
+// }
