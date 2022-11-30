@@ -20,8 +20,8 @@ export class SocketClients implements OnModuleInit {
             console.log(this.socketClient.id)
         })
 
-        this.socketClient.on('onMessage', (payload: any) => {
+        this.socketClient.on('onMessage', (payload: any) => { 
             console.log(payload)
-        })
+        }) 
     }
 }
