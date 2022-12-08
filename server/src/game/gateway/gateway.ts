@@ -23,8 +23,7 @@ export class Mygeteway implements OnModuleInit {
  
     onModuleInit() {
         this.server.on('connection', socket => {
-            // console.log('connected')
-            // console.log(socket.id)
+            console.log('connected: ', socket.id)
         })
     }
 
@@ -41,7 +40,6 @@ export class Mygeteway implements OnModuleInit {
 
     @SubscribeMessage('findGame')
     reqToJoin(@ConnectedSocket()  socket: Socket) {
-        console.log(socket.id)
         let exist = 0
         if (this.count == 2) {
             this.roomName = Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36)
@@ -71,10 +69,7 @@ export class Mygeteway implements OnModuleInit {
                 }])
             }
             this.count++
-            if (this.count == 1) {
-                socket.emit("onMessage", "Waiting for another player to join")
-            }
-            else if (this.count == 2) {
+            if (this.count == 2) {
                 this.server.to(this.roomName).emit("joinRoom", {
                     status: "Pending",
                     roomName: this.roomName,
@@ -83,26 +78,90 @@ export class Mygeteway implements OnModuleInit {
                 })
             }
         }
-        console.log(this.roomData)
+    }
+
+    ballIntersectWall() {
+        let w = this.beStage.w - 1.5 / 2 - this.beBall.args[0] / 2
+        if (this.beBall.position.x >= w || this.beBall.position.x <= -w)
+            return 1
+        else
+            return 0
     }
 
     @SubscribeMessage('startGame')
-    startGame(@MessageBody() data: any, roomName: string) {
-        this.server.to(roomName).emit("onMessage", "game started")
+    startGame(@MessageBody() data: any) {
+        this.server.to(data.roomName).emit("ball", this.beBall)
         const maxW = this.beStage.w - 1.5 / 2 - this.beBall.args[0] / 2
         const maxH = this.beStage.h - 1.5 / 2 - this.beBall.args[0] / 2
         let signalX = Math.random() > 0.5 ? 1 : -1
         let signalY = Math.random() > 0.5 ? 1 : -1
 
-        setInterval(() => {
-            if (this.beBall.position.x >= maxW || this.beBall.position.x <= -maxW)
+        const inter = setInterval(async () => {
+            if (this.ballIntersectWall() == 1){
                 signalX *= -1
-            this.beBall.position.x += signalX
-            if (this.beBall.position.y >= maxH || this.beBall.position.y <= -maxH)
+                console.log("change signal x")
+            }
+            if (this.ballIntersectPlayer(this.bePlayer1) == 1 || this.ballIntersectPlayer(this.bePlayer2) == 1) {
                 signalY *= -1
+                console.log("change signal y")
+            }
+            else if (this.ballIntersectPlayer(this.bePlayer1) == -1 || this.ballIntersectPlayer(this.bePlayer2) == -1) {
+                // if (this.beBall.position.y > 0) {
+                //     this.roomData.get(roomName)[1]["score"]++
+                //     this.server.emit("onMessage", "player 2 score")
+                // }
+                // else if (this.beBall.position.y < 0) {
+                //     this.roomData.get(roomName)[0]["score"]++
+                //     this.server.emit("onMessage", "player 1 score")
+                // }
+                this.resetBall()
+                console.log("reset")
+                this.sleep(2000)
+                signalX = Math.random() > 0.5 ? 1 : -1
+                signalY = Math.random() > 0.5 ? 1 : -1
+            }
+            this.beBall.position.x += signalX
             this.beBall.position.y += signalY
-            this.server.to(roomName).emit("onMessage", "hello")
             console.log(this.beBall.position)
-        }, 1000 /110)
+        }, 100)
     }
+
+    ballIntersectPlayer(player: any) {
+        let h = this.beStage.h - 1.5 / 2 - this.beBall.args[0] / 2 - player.width
+        if (this.beBall.position.y == h) {
+            let w = player.position.x  + player.size / 2
+            let w2 = player.position.x - player.size / 2
+            if (this.beBall.position.x >= w2 && this.beBall.position.x <= w)
+                return 1
+            else
+                return -1
+        }
+        else {
+            if (this.beBall.position.y > 0) {
+                if (this.beBall.position.y > h)
+                    return -1
+                else
+                    return 0
+            }
+            else if (this.beBall.position.y < 0) {
+                if (this.beBall.position.y < -h)
+                    return -1
+                else
+                    return 0
+            }
+        }
+    }
+    resetBall() {
+        this.beBall.position.x = 0
+        this.beBall.position.y = 0
+    }
+    
+    changePlayerPosition(player: any, direction: number) {
+        player.position.x += direction
+    }
+    sleep(seconds) {
+        var currentTime = new Date().getTime();
+        while (currentTime + seconds >= new Date().getTime()) {
+        }
+     }
 }
