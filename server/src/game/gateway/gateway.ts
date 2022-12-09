@@ -128,15 +128,22 @@ export class Mygeteway implements OnModuleInit {
                 console.log("change signal y")
             }
             else if (this.ballIntersectPlayer(this.bePlayer1, roomName) == -1 || this.ballIntersectPlayer(this.bePlayer2, roomName) == -1) {
+                if (ball1.y > 0)
+                    this.roomData.get(roomName)[1].player1.score++
+                else if (ball1.y < 0)
+                    this.roomData.get(roomName)[2].player2.score++
                 this.resetBall(roomName)
-                console.log(ball1)
-                this.server.to(roomName).emit("ball", ball1)
+                let test = this.server.to(roomName).emit("reset", {
+                    "ball": this.roomData.get(roomName)[0].ball.position,
+                    "player1Score": this.roomData.get(roomName)[1].player1.score,
+                    "player2Score": this.roomData.get(roomName)[2].player2.score
+                })
+                console.log(test)
                 console.log("reset")
                 this.sleep(2000)
                 signalX = Math.random() > 0.5 ? 1 : -1
                 signalY = Math.random() > 0.5 ? 1 : -1
             }
-            //get the signal to move
             this.roomData.get(roomName)[0].ball.position.x += signalX
             this.roomData.get(roomName)[0].ball.position.y += signalY
         }, 100)
