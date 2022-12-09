@@ -5,7 +5,7 @@ import { ball, player1, player2, stage } from './data'
 
 @WebSocketGateway({
     cors: {
-        origin: '*'
+        origin: '*',
     },
 })
 
@@ -16,14 +16,12 @@ export class Mygeteway implements OnModuleInit {
     count  = 2
     roomData = new Map<string, any>([])
     roomName = ''
-    beStage = stage
-    beBall = ball
     bePlayer1 = player1
     bePlayer2 = player2
  
     onModuleInit() {
         this.server.on('connection', socket => {
-            console.log('connected: ', socket.id)
+            // console.log('connected: ', socket.id)
         })
     }
 
@@ -43,122 +41,176 @@ export class Mygeteway implements OnModuleInit {
         let exist = 0
         if (this.count == 2) {
             this.roomName = Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36)
+            this.roomData.set(this.roomName, [{"ball": ball}])
             this.count = 0
         }
         socket.join(this.roomName)
         let socketArray = this.roomData.get(this.roomName)
-        this.roomData.forEach((value) => {
-            if (value.includes(socket.id)) {
-                socket.emit("onMessage", "You are already in the room")
-                exist = 1
-                return
-            }
-        })
-        if (exist == 0) {
-            if (socketArray) {
-                this.roomData.set(this.roomName, [...socketArray,{
-                    "socketId": socket.id,
-                    "role": this.count == 0 ? "player1" : "player2",
-                    "score": 0,
-                }])
-            } else {
-                this.roomData.set(this.roomName, [{
-                    "socketId": socket.id, 
-                    "role": this.count == 0 ? "player1" : "player2",
-                    "score": 0,
-                }])
-            }
-            this.count++
-            if (this.count == 2) {
-                this.server.to(this.roomName).emit("joinRoom", {
-                    status: "Pending",
-                    roomName: this.roomName,
-                    player1: this.roomData.get(this.roomName)[0]["socketId"],
-                    player2: this.roomData.get(this.roomName)[1]["socketId"],
-                })
+        for (let [key, value] of this.roomData) {
+            for (let i = 0; i < value.length; i++) {
+                if (value[i].player1?.socketId == socket.id || value[i].player2?.socketId == socket.id) {
+                    exist = 1
+                    break
+                }
             }
         }
+        if (exist == 0) {
+            if (this.count == 0) {
+                if (socketArray) {
+                    this.roomData.set(this.roomName, [...socketArray, {
+                        "player1": {
+                            "socketId": socket.id,
+                            "score": 0,
+                            "position": player1.position
+                        }
+                    }])
+                }
+                else {
+                    this.roomData.set(this.roomName, [{
+                        "player1": {
+                            "socketId": socket.id,
+                            "score": 0,
+                            "position": player1.position
+                        }
+                    }])
+                }
+            } else if (this.count == 1) {
+                if (socketArray) {
+                    this.roomData.set(this.roomName, [...socketArray, {
+                        "player2": {
+                            "socketId": socket.id,
+                            "score": 0,
+                            "position": player2.position
+                        }
+                    }])
+                }
+                else {
+                    this.roomData.set(this.roomName, [{
+                        "player1": {
+                            "socketId": socket.id,
+                            "score": 0,
+                            "position": player1.position
+                        }
+                    }])
+                }
+                this.server.to(this.roomName).emit("joinRoom", {
+                    "Status": "Pending",
+                    "roomName": this.roomName,
+                    "player1": this.roomData.get(this.roomName)[1].player1.socketId,
+                    "player2": this.roomData.get(this.roomName)[2].player2.socketId
+                })
+            }
+            this.count++
+        }
+        console.log(this.roomData)
     }
 
-    ballIntersectWall() {
-        let w = this.beStage.w - 1.5 / 2 - this.beBall.args[0] / 2
-        if (this.beBall.position.x >= w || this.beBall.position.x <= -w)
-            return 1
-        else
-            return 0
-    }
 
     @SubscribeMessage('startGame')
     startGame(@MessageBody() data: any) {
-        this.server.to(data.roomName).emit("ball", this.beBall)
-        const maxW = this.beStage.w - 1.5 / 2 - this.beBall.args[0] / 2
-        const maxH = this.beStage.h - 1.5 / 2 - this.beBall.args[0] / 2
+        const len = this.roomData.get(data.roomName)
+        if (!len)
+            return
+        const roomName = data.roomName
+        this.ballIntersectWall(roomName)
+        let ball1 = this.roomData.get(roomName)[0].ball.position
         let signalX = Math.random() > 0.5 ? 1 : -1
         let signalY = Math.random() > 0.5 ? 1 : -1
 
-        const inter = setInterval(async () => {
-            if (this.ballIntersectWall() == 1){
+        const inter = setInterval(() => {
+            this.server.to(roomName).emit("ball", ball1)
+            if (this.ballIntersectWall(roomName) == 1){
                 signalX *= -1
                 console.log("change signal x")
             }
-            if (this.ballIntersectPlayer(this.bePlayer1) == 1 || this.ballIntersectPlayer(this.bePlayer2) == 1) {
+            if (this.ballIntersectPlayer(this.bePlayer1, roomName) == 1 || this.ballIntersectPlayer(this.bePlayer2, roomName) == 1) {
                 signalY *= -1
                 console.log("change signal y")
             }
-            else if (this.ballIntersectPlayer(this.bePlayer1) == -1 || this.ballIntersectPlayer(this.bePlayer2) == -1) {
-                // if (this.beBall.position.y > 0) {
-                //     this.roomData.get(roomName)[1]["score"]++
-                //     this.server.emit("onMessage", "player 2 score")
-                // }
-                // else if (this.beBall.position.y < 0) {
-                //     this.roomData.get(roomName)[0]["score"]++
-                //     this.server.emit("onMessage", "player 1 score")
-                // }
-                this.resetBall()
+            else if (this.ballIntersectPlayer(this.bePlayer1, roomName) == -1 || this.ballIntersectPlayer(this.bePlayer2, roomName) == -1) {
+                this.resetBall(roomName)
+                console.log(ball1)
+                this.server.to(roomName).emit("ball", ball1)
                 console.log("reset")
                 this.sleep(2000)
                 signalX = Math.random() > 0.5 ? 1 : -1
                 signalY = Math.random() > 0.5 ? 1 : -1
             }
-            this.beBall.position.x += signalX
-            this.beBall.position.y += signalY
-            console.log(this.beBall.position)
+            //get the signal to move
+            this.roomData.get(roomName)[0].ball.position.x += signalX
+            this.roomData.get(roomName)[0].ball.position.y += signalY
         }, 100)
     }
 
-    ballIntersectPlayer(player: any) {
-        let h = this.beStage.h - 1.5 / 2 - this.beBall.args[0] / 2 - player.width
-        if (this.beBall.position.y == h) {
+    @SubscribeMessage('movePlayer')
+    movePlayer(@MessageBody() data: any) {
+        const roomName = data.roomName
+        const socketId = data.socketId
+        const signal  = data.signal
+        for(let i = 0; i < this.roomData.get(roomName).length; i++) {
+            if (this.roomData.get(roomName)[i].player1?.socketId == socketId) {
+                this.roomData.get(roomName)[i].player1.position.x += signal
+                this.server.to(roomName).emit("player1", {
+                    "position": this.roomData.get(roomName)[i].player1.position,
+                })
+                break
+            }
+            else if (this.roomData.get(roomName)[i].player2?.socketId == socketId) {
+                this.roomData.get(roomName)[i].player2.position.x += signal
+                this.server.to(roomName).emit("player2", {
+                    "position": this.roomData.get(roomName)[i].player2.position,
+                })
+                break
+            }
+        }
+    }
+
+    ballIntersectWall(roomName: string) {
+        let ball1 = this.roomData.get(roomName)[0].ball.position
+        let w = stage.w - 1.5 / 2 - ball.args[0] / 2
+        if (ball1.x >= w || ball1.x <= -w)
+            return 1
+        else
+            return 0
+    }
+
+    ballIntersectPlayer(player: any, roomName: string) {
+        let ball1 = this.roomData.get(roomName)[0].ball.position
+        let h = stage.h - 1.5 / 2 - ball.args[0] / 2 - player.width
+        if (ball1.y == h) {
             let w = player.position.x  + player.size / 2
             let w2 = player.position.x - player.size / 2
-            if (this.beBall.position.x >= w2 && this.beBall.position.x <= w)
+            if (ball1.x >= w2 && ball1.x <= w)
                 return 1
             else
                 return -1
         }
         else {
-            if (this.beBall.position.y > 0) {
-                if (this.beBall.position.y > h)
+            if (ball1.y > 0) {
+                if (ball1.y > h)
                     return -1
                 else
                     return 0
             }
-            else if (this.beBall.position.y < 0) {
-                if (this.beBall.position.y < -h)
+            else if (ball1.y < 0) {
+                if (ball1.y < -h)
                     return -1
                 else
                     return 0
             }
         }
     }
-    resetBall() {
-        this.beBall.position.x = 0
-        this.beBall.position.y = 0
+
+    resetBall(roomName: string) {
+        let ball1 = this.roomData.get(roomName)[0].ball.position
+        ball1.x = 0
+        ball1.y = 0
     }
     
     changePlayerPosition(player: any, direction: number) {
         player.position.x += direction
     }
+
     sleep(seconds) {
         var currentTime = new Date().getTime();
         while (currentTime + seconds >= new Date().getTime()) {
