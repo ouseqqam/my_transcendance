@@ -174,7 +174,7 @@ export class Mygeteway implements OnModuleInit {
 
     ballIntersectWall(roomName: string) {
         let ball1 = this.roomData.get(roomName)[0].ball.position
-        let w = stage.w - 1.5 / 2 - ball.args[0] / 2
+        let w = stage.w / 2 - 1.5 / 2 - ball.args[0] / 2
         if (ball1.x >= w || ball1.x <= -w)
             return 1
         else
@@ -183,7 +183,7 @@ export class Mygeteway implements OnModuleInit {
 
     ballIntersectPlayer(player: any, roomName: string) {
         let ball1 = this.roomData.get(roomName)[0].ball.position
-        let h = stage.h - 1.5 / 2 - ball.args[0] / 2 - player.width
+        let h = stage.h / 2 - 1.5 / 2 - ball.args[0] / 2 - player.width
         if (ball1.y == h) {
             let w = player.position.x  + player.size / 2
             let w2 = player.position.x - player.size / 2
