@@ -196,7 +196,7 @@ export class Mygeteway implements OnModuleInit {
       return 1;
     return 0;
   }
-  // we must switch m,ap to objects
+  // we must switch map to objects
 
   ballIntersectPlayer(roomName: string, dx: number, dy: number) {
     let currentRoom = this.roomData.get(roomName);
@@ -208,7 +208,10 @@ export class Mygeteway implements OnModuleInit {
       currentBall.y + dy - 0.5 == player2.y ||
       (currentBall.y + dy - 0.5 == player1.y &&
         currentBall.x + dx >= player1.x - paddle1.size / 2 &&
-        currentBall.x + dx <= player1.x + paddle1.size / 2)
+        currentBall.x + dx <= player1.x + paddle1.size / 2) ||
+      (currentBall.y + dy - 0.5 == player2.y &&
+        currentBall.x + dx <= player2.x - paddle2.size / 2 &&
+        currentBall.x + dx >= player2.x + paddle2.size / 2)
     )
       return 1;
     return 0;
