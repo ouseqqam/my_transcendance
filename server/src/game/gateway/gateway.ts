@@ -21,7 +21,9 @@ export class Mygeteway implements OnModuleInit {
  
     onModuleInit() {
         this.server.on('connection', socket => {
-            // console.log('connected: ', socket.id)
+        })
+
+        this.server.on('disconnect', socket => {
         })
     }
 
@@ -89,7 +91,7 @@ export class Mygeteway implements OnModuleInit {
                         "player1": {
                             "socketId": socket.id,
                             "score": 0,
-                            "position": player1.position
+                            "position": player2.position
                         }
                     }])
                 }
@@ -109,16 +111,24 @@ export class Mygeteway implements OnModuleInit {
     @SubscribeMessage('startGame')
     startGame(@MessageBody() data: any) {
         const len = this.roomData.get(data.roomName)
-        if (!len)
-            return
         const roomName = data.roomName
+        if (!len || !roomName)
+            return
         this.ballIntersectWall(roomName)
         let ball1 = this.roomData.get(roomName)[0].ball.position
         let signalX = Math.random() > 0.5 ? 1 : -1
         let signalY = Math.random() > 0.5 ? 1 : -1
 
         const inter = setInterval(() => {
-            this.server.to(roomName).emit("ball", ball1)
+            this.server.to(roomName).emit("gameData",{
+                "ball": this.roomData.get(roomName)[0].ball.position,
+                "player1": this.roomData.get(roomName)[1].player1.position,
+                "player2": this.roomData.get(roomName)[2].player2.position,
+                score: {
+                    "player1": this.roomData.get(roomName)[1].player1.score,
+                    "player2": this.roomData.get(roomName)[2].player2.score
+                }
+            })
             if (this.ballIntersectWall(roomName) == 1){
                 signalX *= -1
                 console.log("change signal x")
@@ -133,14 +143,17 @@ export class Mygeteway implements OnModuleInit {
                 else if (ball1.y < 0)
                     this.roomData.get(roomName)[2].player2.score++
                 this.resetBall(roomName)
-                let test = this.server.to(roomName).emit("reset", {
+                let test = this.server.to(roomName).emit("gameData", {
                     "ball": this.roomData.get(roomName)[0].ball.position,
-                    "player1Score": this.roomData.get(roomName)[1].player1.score,
-                    "player2Score": this.roomData.get(roomName)[2].player2.score
+                    "player1": this.roomData.get(roomName)[1].player1.position,
+                    "player2": this.roomData.get(roomName)[2].player2.position,
+                    score: {
+                        "player1": this.roomData.get(roomName)[1].player1.score,
+                        "player2": this.roomData.get(roomName)[2].player2.score
+                    }
                 })
                 console.log(test)
                 console.log("reset")
-                this.sleep(2000)
                 signalX = Math.random() > 0.5 ? 1 : -1
                 signalY = Math.random() > 0.5 ? 1 : -1
             }
@@ -148,6 +161,8 @@ export class Mygeteway implements OnModuleInit {
             this.roomData.get(roomName)[0].ball.position.y += signalY
         }, 100)
     }
+
+
 
     @SubscribeMessage('movePlayer')
     movePlayer(@MessageBody() data: any) {
@@ -174,8 +189,8 @@ export class Mygeteway implements OnModuleInit {
 
     ballIntersectWall(roomName: string) {
         let ball1 = this.roomData.get(roomName)[0].ball.position
-        let w = stage.w / 2 - 1.5 / 2 - ball.args[0] / 2
-        if (ball1.x >= w || ball1.x <= -w)
+        let w = stage.w / 2 - 1.5 - ball.args[0]
+        if (ball1.x > w || ball1.x < -w)
             return 1
         else
             return 0
