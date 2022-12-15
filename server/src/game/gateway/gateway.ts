@@ -1,15 +1,14 @@
-import { OnModuleInit } from "@nestjs/common";
-import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from 'socket.io'
 import { ball, player1, player2, stage } from './data'
 
 @WebSocketGateway({
     cors: {
         origin: '*',
-    },
+    }
 })
 
-export class Mygeteway implements OnModuleInit {
+export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     @WebSocketServer()
     server: Server
 
@@ -18,24 +17,43 @@ export class Mygeteway implements OnModuleInit {
     roomName = ''
     bePlayer1 = player1
     bePlayer2 = player2
- 
-    onModuleInit() {
-        this.server.on('connection', socket => {
-        })
+  
+    afterInit(){
+        console.log("init")
+    }
 
-        this.server.on('disconnect', socket => {
-        })
+    handleConnection(){
+        console.log("connect")
+    }
+
+    handleDisconnect(client: Socket){
+        console.log("disconnect")
+        let socketId = client.id
+        for (let [key, value] of this.roomData) {
+            for (let i = 0; i < value.length; i++) {
+                if (value[i].player1?.socketId == socketId || value[i].player2?.socketId == socketId) {
+                    this.server.to(key).emit("disconnected", {
+                        "socketId": socketId,
+                        "message": "disconnect"
+                    })
+                    this.roomData.delete(key)
+                    return
+                }
+            }
+        }
     }
 
     @SubscribeMessage('joinToRoom')
     JoinToRoom(roomName: string, @ConnectedSocket() socket: Socket) {
         socket.join(roomName)
         let socketArray = this.roomData.get(this.roomName)
-        this.roomData.set(this.roomName, [...socketArray,{
+        if (socketArray) {
+            socketArray[3].watchers.push(socket.id)
+        }
+        this.server.to(roomName).emit("watcher", {
             "socketId": socket.id,
-            "role": "watcher"
-        }])
-        this.server.to(roomName).emit("onMessage", "you can now watch the game")
+            "message": "joined to room"
+        })
     }
 
     @SubscribeMessage('findGame')
@@ -83,7 +101,10 @@ export class Mygeteway implements OnModuleInit {
                             "socketId": socket.id,
                             "score": 0,
                             "position": player2.position
-                        }
+                        },
+                    }, 
+                    {
+                        "watchers": []
                     }])
                 }
                 else {
@@ -108,6 +129,7 @@ export class Mygeteway implements OnModuleInit {
     }
 
 
+
     @SubscribeMessage('startGame')
     startGame(@MessageBody() data: any) {
         const len = this.roomData.get(data.roomName)
@@ -119,7 +141,7 @@ export class Mygeteway implements OnModuleInit {
         let signalX = Math.random() > 0.5 ? 1 : -1
         let signalY = Math.random() > 0.5 ? 1 : -1
 
-        const inter = setInterval(() => {
+        const interval = setInterval(() => {
             this.server.to(roomName).emit("gameData",{
                 "ball": this.roomData.get(roomName)[0].ball.position,
                 "player1": this.roomData.get(roomName)[1].player1.position,
@@ -143,15 +165,15 @@ export class Mygeteway implements OnModuleInit {
                 else if (ball1.y < 0)
                     this.roomData.get(roomName)[2].player2.score++
                 this.resetBall(roomName)
-                let test = this.server.to(roomName).emit("gameData", {
-                    "ball": this.roomData.get(roomName)[0].ball.position,
-                    "player1": this.roomData.get(roomName)[1].player1.position,
-                    "player2": this.roomData.get(roomName)[2].player2.position,
-                    score: {
+                this.resetPlayers(roomName)
+                if (this.roomData.get(roomName)[1].player1.score == 10 || this.roomData.get(roomName)[2].player2.score == 10) {
+                    this.server.to(roomName).emit("gameOver", {
                         "player1": this.roomData.get(roomName)[1].player1.score,
                         "player2": this.roomData.get(roomName)[2].player2.score
-                    }
-                })
+                    })
+                    this.roomData.delete(roomName)
+                    clearInterval(interval)
+                }
                 console.log(test)
                 console.log("reset")
                 signalX = Math.random() > 0.5 ? 1 : -1
@@ -198,28 +220,22 @@ export class Mygeteway implements OnModuleInit {
 
     ballIntersectPlayer(player: any, roomName: string) {
         let ball1 = this.roomData.get(roomName)[0].ball.position
-        let h = stage.h / 2 - 1.5 / 2 - ball.args[0] / 2 - player.width
+        let h = stage.h / 2 - 1.5 - ball.args[0] - player.width
         if (ball1.y == h) {
             let w = player.position.x  + player.size / 2
             let w2 = player.position.x - player.size / 2
             if (ball1.x >= w2 && ball1.x <= w)
                 return 1
-            else
-                return -1
+            return -1
         }
         else {
-            if (ball1.y > 0) {
+            if (ball1.y > 0)
                 if (ball1.y > h)
                     return -1
-                else
-                    return 0
-            }
-            else if (ball1.y < 0) {
+            else if (ball1.y < 0)
                 if (ball1.y < -h)
                     return -1
-                else
-                    return 0
-            }
+            return 0
         }
     }
 
@@ -229,8 +245,40 @@ export class Mygeteway implements OnModuleInit {
         ball1.y = 0
     }
     
-    changePlayerPosition(player: any, direction: number) {
-        player.position.x += direction
+    resetPlayers(roomName: string) {
+        let player1 = this.roomData.get(roomName)[1].player1.position
+        let player2 = this.roomData.get(roomName)[2].player2.position
+        player1.x = 0
+        player2.x = 0
+    }
+
+    
+    @SubscribeMessage('player')
+    player1(@MessageBody() data: any) {
+        const roomName = data.roomName
+        const socketId = data.socketId
+        const signal  = data.signal
+        let position = 1
+        if (signal.left == true)
+            position = -1
+        else if (signal.right == true)
+            position = 1
+        for(let i = 0; i < this.roomData.get(roomName).length; i++) {
+            if (this.roomData.get(roomName)[i].player1?.socketId == socketId) {
+                this.roomData.get(roomName)[i].player1.position.x += position
+                this.server.to(roomName).emit("player1", {
+                    "position": this.roomData.get(roomName)[i].player1.position,
+                })
+                break
+            }
+            else if (this.roomData.get(roomName)[i].player2?.socketId == socketId) {
+                this.roomData.get(roomName)[i].player2.position.x += position
+                this.server.to(roomName).emit("player2", {
+                    "position": this.roomData.get(roomName)[i].player2.position,
+                })
+                break
+            }
+        }
     }
 
     sleep(seconds) {
