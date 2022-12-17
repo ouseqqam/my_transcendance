@@ -1,5 +1,6 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from 'socket.io'
+import { PrismaService } from "src/prisma/prisma.service";
 import { ball, player1, player2, stage } from './data'
 
 @WebSocketGateway({
@@ -9,6 +10,8 @@ import { ball, player1, player2, stage } from './data'
 })
 
 export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
+    constructor (private prisma: PrismaService) {}
+
     @WebSocketServer()
     server: Server
 
@@ -186,6 +189,35 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         }, 100)
     }
 
+    @SubscribeMessage('paddleMove')
+    player1(@MessageBody() data: any) {
+        const roomName = data.roomName
+        const room = this.roomData.get(roomName)
+        const socketId = data.socketId
+        const right = data.right
+        const left = data.left
+        const w = stage.w / 2 - stage.cRight.args[1] - player1.size / 2
+
+        if (!room || !roomName || !socketId)
+            return
+        
+        if (socketId == room[1].player.socketId) {
+            const player = room[1].player.position
+            if (right && player.x + 3 < w)
+                player.x += 3
+            else if (left && player.x - 3 > -w)
+                player.x -= 3
+            this.server.to(roomName).emit("player1", player)
+        }
+        else if (socketId == room[2].player.socketId) {
+            const player = room[2].player.position
+            if (right && player.x + 3 < w)
+                player.x += 3
+            else if (left && player.x - 3 > -w)
+                player.x -= 3
+            this.server.to(roomName).emit("player2", player)
+        }
+    }
 
     ballIntersectWall(ball1: any) {
         let w = stage.w / 2 - 1.5 - ball.args[0]
@@ -195,27 +227,25 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
             return 0
     }
 
-    ballIntersectPlayer(player: any, ball1: any) {
-        let h = stage.h / 2 - 1.5 / 2 - ball.args[0] / 2 - player1.width
-        if (ball1.y == h) {
+    ballIntersectPlayer(player: any, ball1: any, signalX: number, signalY: number) {
+        if (ball1.y + signalY == player.position.y) {
             let w = player.position.x  + player1.size / 2
             let w2 = player.position.x - player1.size / 2
-            if (ball1.x >= w2 && ball1.x <= w)
+            if (ball1.x + signalX >= w2 && ball1.x + signalX <= w)
                 return 1
             return -1
         }
         else {
-            if (ball1.y > 0){
-                if (ball1.y > h) {
+            if (ball1.y + signalY > 0){
+                if (ball1.y > player.position.y) {
                     return -1
                 }
             }
-            else if (ball1.y < 0){
-                if (ball1.y < -h) {
+            else if (ball1.y + signalY < 0){
+                if (ball1.y < player.position.y) {
                     return -1
                 }
             }
-            return 0
         }
     }
 
@@ -232,40 +262,5 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         let player2 = this.roomData.get(roomName)[2].player.position
         player1.x = 0
         player2.x = 0
-    }
-
-    
-    @SubscribeMessage('player')
-    player1(@MessageBody() data: any) {
-        const roomName = data.roomName
-        const socketId = data.socketId
-        const signal  = data.signal
-        let position = 1
-        if (signal.left == true)
-            position = -1
-        else if (signal.right == true)
-            position = 1
-        for(let i = 0; i < this.roomData.get(roomName).length; i++) {
-            if (this.roomData.get(roomName)[i].player1?.socketId == socketId) {
-                this.roomData.get(roomName)[i].player1.position.x += position
-                this.server.to(roomName).emit("player1", {
-                    "position": this.roomData.get(roomName)[i].player1.position,
-                })
-                break
-            }
-            else if (this.roomData.get(roomName)[i].player2?.socketId == socketId) {
-                this.roomData.get(roomName)[i].player2.position.x += position
-                this.server.to(roomName).emit("player2", {
-                    "position": this.roomData.get(roomName)[i].player2.position,
-                })
-                break
-            }
-        }
-    }
-
-    sleep(seconds) {
-        var currentTime = new Date().getTime();
-        while (currentTime + seconds >= new Date().getTime()) {
-        }
     }
 }
