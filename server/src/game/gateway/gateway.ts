@@ -158,13 +158,13 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
                 signalX *= -1
                 console.log("change signal x")
             }
-            if (this.ballIntersectPlayer(bePlayer1, ballPos) == 1 ||
-                    this.ballIntersectPlayer(bePlayer2, ballPos) == 1) {
+            if (this.ballIntersectPlayer(bePlayer1, ballPos, signalX, signalY) == 1 ||
+                    this.ballIntersectPlayer(bePlayer1, ballPos, signalX, signalY) == 1) {
                 signalY *= -1
                 console.log("change signal y")
             }
-            else if (this.ballIntersectPlayer(bePlayer1, ballPos) == -1 ||
-                        this.ballIntersectPlayer(bePlayer2, ballPos) == -1) {
+            else if (this.ballIntersectPlayer(bePlayer1, ballPos, signalX, signalY) == -1 ||
+                        this.ballIntersectPlayer(bePlayer1, ballPos, signalX, signalY) == -1) {
                 if (ballPos.y > 0)
                     this.roomData.get(roomName)[1].player.score++
                 else if (ballPos.y < 0)
