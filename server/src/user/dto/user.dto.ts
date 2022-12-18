@@ -19,4 +19,4 @@ export class userDto {
 
     @IsEmail()
     email?: string
-}  
+}

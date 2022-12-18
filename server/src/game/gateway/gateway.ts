@@ -154,7 +154,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
                     "player2": bePlayer2.score
                 }
             })
-            if (this.ballIntersectWall(ballPos) == 1){
+            if (this.ballIntersectWall(ballPos, signalX) == 1){
                 signalX *= -1
                 console.log("change signal x")
             }
@@ -219,9 +219,9 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         }
     }
 
-    ballIntersectWall(ball1: any) {
-        let w = stage.w / 2 - 1.5 - ball.args[0]
-        if (ball1.x > w || ball1.x < -w)
+    ballIntersectWall(ball1: any, signalX: number) {
+        let w = stage.w / 2 - stage.cRight.args[0] - ball.args[0]
+        if (ball1.x + signalX > w || ball1.x + signalX < -w)
             return 1
         else
             return 0
@@ -231,7 +231,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         if (ball1.y + signalY == player.position.y) {
             let w = player.position.x  + player1.size / 2
             let w2 = player.position.x - player1.size / 2
-            if (ball1.x + signalX >= w2 && ball1.x + signalX <= w)
+            if (ball1.x + signalX > w2 && ball1.x + signalX < w)
                 return 1
         }
         else {
