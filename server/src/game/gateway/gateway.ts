@@ -1,6 +1,5 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from 'socket.io'
-import { PrismaService } from "src/prisma/prisma.service";
 import { ball, player1, player2, stage } from './data'
 
 @WebSocketGateway({
@@ -10,7 +9,6 @@ import { ball, player1, player2, stage } from './data'
 })
 
 export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
-    constructor (private prisma: PrismaService) {}
 
     @WebSocketServer()
     server: Server
@@ -20,11 +18,11 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     roomName = ''
   
     afterInit(){
-        console.log("init")
+        // console.log("init")
     }
 
     handleConnection(){
-        console.log("connect")
+        // console.log("connect")
     }
 
     handleDisconnect(client: Socket){
@@ -47,7 +45,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     @SubscribeMessage('joinToRoom')
     JoinToRoom(roomName: string, @ConnectedSocket() socket: Socket) {
         socket.join(roomName)
-        let socketArray = this.roomData.get(this.roomName)
+        let socketArray = this.roomData.get(roomName)
         if (socketArray) {
             socketArray[3].watchers.push(socket.id)
         }
@@ -62,6 +60,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         let exist = 0
         if (this.count == 2) {
             this.roomName = Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36)
+            console.log(ball)
             this.roomData.set(this.roomName, [{"ball": ball}])
             this.count = 0
         }
@@ -103,10 +102,12 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
                             "score": 0,
                             "position": player2.position
                         },
-                    }, 
+                    },
                     {
                         "watchers": []
-                    }])
+                    },
+                    {interval: 0},
+                ])
                 }
                 else {
                     this.roomData.set(this.roomName, [{
@@ -118,7 +119,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
                     }])
                 }
                 this.server.to(this.roomName).emit("joinRoom", {
-                    "Status": "Pending",
+                    "status": "pending",
                     "roomName": this.roomName,
                     "player1": this.roomData.get(this.roomName)[1].player.socketId,
                     "player2": this.roomData.get(this.roomName)[2].player.socketId
@@ -126,67 +127,62 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
             }
             this.count++
         }
-        console.log(this.roomData)
     }
 
 
 
     @SubscribeMessage('startGame')
     startGame(@MessageBody() data: any) {
-        const room = this.roomData.get(data.roomName)
-        const roomName = data.roomName
+        let room = this.roomData.get(data.roomName)
+        let roomName = data.roomName
         if (!room || !roomName)
             return
         let signalX = Math.random() > 0.5 ? 1 : -1
         let signalY = Math.random() > 0.5 ? 1 : -1
 
-        const interval = setInterval(() => {
-            let ballPos = this.roomData.get(roomName)[0].ball.position
-            let bePlayer1 = this.roomData.get(roomName)[1].player
-            let bePlayer2 = this.roomData.get(roomName)[2].player
-
-            this.server.to(roomName).emit("gameData", {
-                "ball": ballPos,
-                "player1": bePlayer1.position,
-                "player2": bePlayer2.position,
+        this.roomData.get(data.roomName)[4].interval = setInterval(() => {
+            this.server.to(data.roomName).emit("gameData", {
+                "ball": this.roomData.get(data.roomName)[0].ball.position,
+                "player1": this.roomData.get(data.roomName)[1].player.position,
+                "player2": this.roomData.get(data.roomName)[2].player.position,
                 score: {
-                    "player1": bePlayer1.score,
-                    "player2": bePlayer2.score
+                    "player1": this.roomData.get(data.roomName)[1].player.score,
+                    "player2": this.roomData.get(data.roomName)[2].player.score
                 }
             })
-            if (this.ballIntersectWall(ballPos, signalX) == 1){
+
+            if (this.ballIntersectWall(this.roomData.get(data.roomName)[0].ball.position, signalX) == 1){
                 signalX *= -1
-                console.log("change signal x")
+                // console.log("change signal x")
             }
-            if (this.ballIntersectPlayer(bePlayer1, ballPos, signalX, signalY) == 1 ||
-                    this.ballIntersectPlayer(bePlayer1, ballPos, signalX, signalY) == 1) {
+            if (this.ballIntersectPlayer(this.roomData.get(data.roomName)[1].player, this.roomData.get(data.roomName)[0].ball.position, signalX, signalY) == 1 ||
+                    this.ballIntersectPlayer(this.roomData.get(data.roomName)[2].player, this.roomData.get(data.roomName)[0].ball.position, signalX, signalY) == 1) {
                 signalY *= -1
-                console.log("change signal y")
+                // console.log("change signal y")
             }
-            else if (this.ballIntersectPlayer(bePlayer1, ballPos, signalX, signalY) == -1 ||
-                        this.ballIntersectPlayer(bePlayer1, ballPos, signalX, signalY) == -1) {
-                if (ballPos.y > 0)
-                    this.roomData.get(roomName)[1].player.score++
-                else if (ballPos.y < 0)
-                    this.roomData.get(roomName)[2].player.score++
-                this.resetBall(roomName)
-                this.resetPlayers(roomName)
-                if (this.roomData.get(roomName)[1].player.score == 10 || this.roomData.get(roomName)[2].player.score == 10) {
-                    this.server.to(roomName).emit("gameOver", {
-                        "player1": this.roomData.get(roomName)[1].player.score,
-                        "player2": this.roomData.get(roomName)[2].player.score
+            else if (this.ballIntersectPlayer(this.roomData.get(data.roomName)[1].player, this.roomData.get(data.roomName)[0].ball.position, signalX, signalY) == -1 ||
+                        this.ballIntersectPlayer(this.roomData.get(data.roomName)[2].player, this.roomData.get(data.roomName)[0].ball.position, signalX, signalY) == -1) {
+                if (this.roomData.get(data.roomName)[0].ball.position.y > 0)
+                    this.roomData.get(data.roomName)[1].player.score++
+                else if (this.roomData.get(data.roomName)[0].ball.position.y < 0)
+                    this.roomData.get(data.roomName)[2].player.score++
+                this.resetBall(data.roomName)
+                this.resetPlayers(data.roomName)
+                if (this.roomData.get(data.roomName)[1].player.score == 10 || this.roomData.get(data.roomName)[2].player.score == 10) {
+                    this.server.to(data.roomName).emit("gameOver", {
+                        "player1": this.roomData.get(data.roomName)[1].player.score,
+                        "player2": this.roomData.get(data.roomName)[2].player.score
                     })
-                    this.roomData.delete(roomName)
-                    clearInterval(interval)
+                    this.roomData.delete(data.roomName)
+                    return clearInterval(this.roomData.get(data.roomName)[4].interval)
                 }
-                console.log("reset")
+                // console.log("reset")
                 signalX = Math.random() > 0.5 ? 1 : -1
                 signalY = Math.random() > 0.5 ? 1 : -1
             }
-            this.roomData.get(roomName)[0].ball.position.x += signalX
-            this.roomData.get(roomName)[0].ball.position.y += signalY
-            console.log(this.roomData.get(roomName)[0].ball.position)
-        }, 100)
+            this.roomData.get(data.roomName)[0].ball.position.x += signalX
+            this.roomData.get(data.roomName)[0].ball.position.y += signalY
+        }, 80)
     }
 
     @SubscribeMessage('paddleMove')
@@ -220,7 +216,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     }
 
     ballIntersectWall(ball1: any, signalX: number) {
-        let w = stage.w / 2 - stage.cRight.args[0] - ball.args[0]
+        let w = stage.w / 2 - stage.cRight.args[0] / 2  - ball.args[0] / 2
         if (ball1.x + signalX > w || ball1.x + signalX < -w)
             return 1
         else
@@ -229,19 +225,20 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
 
     ballIntersectPlayer(player: any, ball1: any, signalX: number, signalY: number) {
         if (ball1.y + signalY == player.position.y) {
-            let w = player.position.x  + player1.size / 2
-            let w2 = player.position.x - player1.size / 2
+            let w = player.position.x  + player1.size / 2 - 0.5 - 1.5 / 2
+            let w2 = player.position.x - player1.size / 2 - 0.5 - 1.5 / 2
             if (ball1.x + signalX > w2 && ball1.x + signalX < w)
                 return 1
         }
         else {
-            if (ball1.y + signalY > 0){
-                if (ball1.y > player.position.y) {
+            
+            if (player.position.y > 0) {
+                if (ball1.y + signalY > player.position.y) {
                     return -1
                 }
             }
-            else if (ball1.y + signalY < 0){
-                if (ball1.y < player.position.y) {
+            else if (player.position.y < 0) {
+                if (ball1.y + signalY < player.position.y) {
                     return -1
                 }
             }
@@ -249,11 +246,8 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     }
 
     resetBall(roomName: string) {
-        let ball1 = this.roomData.get(roomName)[0].ball.position
-        // console.log("position before: ", this.roomData.get(roomName)[0].ball.position)
-        ball1.x = 0
-        ball1.y = 0
-        // console.log("position: ", this.roomData.get(roomName)[0].ball.position)
+        this.roomData.get(roomName)[0].ball.position.x = 0
+        this.roomData.get(roomName)[0].ball.position.y = 0
     }
     
     resetPlayers(roomName: string) {
