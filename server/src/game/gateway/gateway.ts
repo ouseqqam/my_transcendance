@@ -16,7 +16,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     count  = 2
     roomData = new Map<string, any>([])
     roomName = ''
-  
+
     afterInit(){
         // console.log("init")
     }
@@ -61,7 +61,15 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         if (this.count == 2) {
             this.roomName = Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36)
             console.log(ball)
-            this.roomData.set(this.roomName, [{"ball": ball}])
+            this.roomData.set(this.roomName, [
+                {
+                    ball: {
+                        position: { x: 0, y: 0, z: 1 },
+                        args: [1, 100, 100]
+                    }
+                }
+            ])
+            console.log(this.roomData.get(this.roomName)[0].ball.position)
             this.count = 0
         }
         socket.join(this.roomName)
