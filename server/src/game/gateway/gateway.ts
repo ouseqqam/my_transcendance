@@ -201,26 +201,36 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         const right = data.right
         const left = data.left
         const w = stage.w / 2 - stage.cRight.args[1] - player1.size / 2
+        const players = []
 
         if (!room || !roomName || !socketId)
             return
         
         if (socketId == room[1].player.socketId) {
-            const player = room[1].player.position
+            let player = room[1].player.position
             if (right && player.x + 3 < w)
                 player.x += 3
             else if (left && player.x - 3 > -w)
                 player.x -= 3
-            this.server.to(roomName).emit("player1", player)
+            players.push(player, this.roomData.get(data.roomName)[2].player.position)
         }
         else if (socketId == room[2].player.socketId) {
-            const player = room[2].player.position
+            let player = room[2].player.position
             if (right && player.x + 3 < w)
                 player.x += 3
             else if (left && player.x - 3 > -w)
                 player.x -= 3
-            this.server.to(roomName).emit("player2", player)
+                players.push(this.roomData.get(data.roomName)[1].player.position, player)
         }
+        this.server.to(roomName).emit("gameData", {
+            "ball": this.roomData.get(data.roomName)[0].ball.position,
+            "player1": players[0],
+            "player2": players[2],
+            score: {
+                "player1": this.roomData.get(data.roomName)[1].player.score,
+                "player2": this.roomData.get(data.roomName)[2].player.score
+            }
+        })
     }
 
     ballIntersectWall(ball1: any, signalX: number) {
