@@ -13,8 +13,8 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     @WebSocketServer()
     server: Server
 
-    count  = 2
-    roomData = new Map<string, any>([])
+    count  = 0
+    roomData = new Map<string, any>()
     roomName = ''
 
     afterInit(){
@@ -26,7 +26,6 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     }
 
     handleDisconnect(client: Socket){
-        console.log("disconnect")
         let socketId = client.id
         for (let [key, value] of this.roomData) {
             for (let i = 0; i < value.length; i++) {
@@ -58,83 +57,61 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     @SubscribeMessage('findGame')
     reqToJoin(@ConnectedSocket()  socket: Socket) {
         let exist = 0
-        if (this.count == 2) {
+        if (this.count == 0) {
             this.roomName = Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36)
-            console.log(ball)
-            this.roomData.set(this.roomName, [
-                {
-                    ball: {
-                        position: { x: 0, y: 0, z: 1 },
-                        args: [1, 100, 100]
-                    }
-                }
-            ])
-            console.log(this.roomData.get(this.roomName)[0].ball.position)
-            this.count = 0
+            this.roomData.set(this.roomName, {
+                ball: {
+                    position: { x: 0, y: 0, z: 1 },
+                    args: [1, 100, 100]
+                },
+            })
         }
-        socket.join(this.roomName)
-        let socketArray = this.roomData.get(this.roomName)
+
+        //check if socket already in room
         for (let [key, value] of this.roomData) {
-            for (let i = 0; i < value.length; i++) {
-                if (value[i].player?.socketId == socket.id || value[i].player?.socketId == socket.id) {
-                    exist = 1
-                    break
-                }
-            }
-        }
-        if (exist == 0) {
-            if (this.count == 0) {
-                if (socketArray) {
-                    this.roomData.set(this.roomName, [...socketArray, {
-                        "player": {
-                            "socketId": socket.id,
-                            "score": 0,
-                            "position": player1.position
-                        }
-                    }])
-                }
-                else {
-                    this.roomData.set(this.roomName, [{
-                        "player": {
-                            "socketId": socket.id,
-                            "score": 0,
-                            "position": player1.position
-                        }
-                    }])
-                }
-            } else if (this.count == 1) {
-                if (socketArray) {
-                    this.roomData.set(this.roomName, [...socketArray, {
-                        "player": {
-                            "socketId": socket.id,
-                            "score": 0,
-                            "position": player2.position
-                        },
-                    },
-                    {
-                        "watchers": []
-                    },
-                    {interval: 0},
-                ])
-                }
-                else {
-                    this.roomData.set(this.roomName, [{
-                        "player": {
-                            "socketId": socket.id,
-                            "score": 0,
-                            "position": player2.position
-                        }
-                    }])
-                }
+            if (socket.id == value?.player1?.socketId || socket.id == value?.player2?.socketId) {
                 this.server.to(this.roomName).emit("joinRoom", {
-                    "status": "pending",
-                    "roomName": this.roomName,
-                    "player1": this.roomData.get(this.roomName)[1].player.socketId,
-                    "player2": this.roomData.get(this.roomName)[2].player.socketId
+                    status: "You are already in room",
                 })
+                console.log("You are already in room")
+                return
             }
-            this.count++
         }
+
+        socket.join(this.roomName)
+        
+        if (this.count == 0 && exist == 0) {
+            this.roomData.set(this.roomName, {
+                ...this.roomData.get(this.roomName),
+                player1: {
+                    socketId: socket.id,
+                    score: 0,
+                    position: { x: 0, y: -60 / 2 + 3, z: 0 }
+                },
+            })
+        }
+        else if (this.count == 1 && exist == 0) {
+            this.roomData.set(this.roomName, {
+                ...this.roomData.get(this.roomName),
+                player2: {
+                    socketId: socket.id,
+                    score: 0,
+                    position: { x: 0, y: 60 / 2 - 3, z: 0 }
+                },
+                watchers: [],
+                interval: 0
+            })
+
+            this.count = -1
+
+            this.server.to(this.roomName).emit("joinRoom", {
+                status: "pending",
+                roomName: this.roomName,
+                player1: this.roomData.get(this.roomName).player1.socketId,
+                player2: this.roomData.get(this.roomName).player2.socketId
+            })
+        }
+        this.count++
     }
 
 
@@ -181,8 +158,9 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
                         "player1": this.roomData.get(data.roomName)[1].player.score,
                         "player2": this.roomData.get(data.roomName)[2].player.score
                     })
+                    clearInterval(this.roomData.get(data.roomName)[4].interval)
                     this.roomData.delete(data.roomName)
-                    return clearInterval(this.roomData.get(data.roomName)[4].interval)
+                    return
                 }
                 // console.log("reset")
                 signalX = Math.random() > 0.5 ? 1 : -1

@@ -20,6 +20,7 @@ model User {
   avatar String
   sender Friend[] @relation("sender")
   reciver Friend[] @relation("reciver")
+  userId Notification[] @relation("userId")
   createdAt DateTime @default(now())
 }
 
@@ -31,4 +32,11 @@ model Friend {
   user2 Int
   accepted Boolean @default(false)
   createdAt DateTime @default(now())
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+  message String
+  userId User @relation("userId", fields: [user], references: [id])
+  user Int
 }
