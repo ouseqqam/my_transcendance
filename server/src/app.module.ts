@@ -6,7 +6,6 @@ import { ConfigModule } from '@nestjs/config';
 import { FriendModule } from './friend/friend.module';
 import { InvitationModule } from './invitation/invitation.module';
 import { GatwayModule } from './game/gateway/gateway.module';
-import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -19,7 +18,6 @@ import { NotificationModule } from './notification/notification.module';
     FriendModule,
     InvitationModule,
     GatwayModule,
-    NotificationModule,
   ],
   // providers: [UserService, FriendService],
 })
