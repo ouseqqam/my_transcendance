@@ -21,6 +21,6 @@ import { NotificationModule } from './notification/notification.module';
     GatwayModule,
     NotificationModule,
   ],
-  // providers: [UserService, FriendService],
+  //  providers: [UserService, FriendService],
 })
 export class AppModule {}

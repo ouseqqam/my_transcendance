@@ -254,8 +254,6 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     
     resetPlayers(roomName: string) {
         this.roomData.get(roomName).player1.position.x = 0
-        this.roomData.get(roomName).player1.position.y = 0
         this.roomData.get(roomName).player2.position.x = 0
-        this.roomData.get(roomName).player2.position.y = 0
     }
 }

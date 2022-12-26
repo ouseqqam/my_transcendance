@@ -20,7 +20,8 @@ model User {
   avatar String
   sender Friend[] @relation("sender")
   reciver Friend[] @relation("reciver")
-  userId Notification[] @relation("userId")
+  senderId Notification[] @relation("senderId")
+  reciverId Notification[] @relation("reciverId")
   createdAt DateTime @default(now())
 }
 
@@ -36,7 +37,9 @@ model Friend {
 
 model Notification {
   id Int @id @default(autoincrement())
-  message String
-  userId User @relation("userId", fields: [user], references: [id])
-  user Int
+  senderId User @relation("senderId",fields: [sender], references: [id])
+  sender Int
+  reciverId User @relation("reciverId",fields: [reciver], references: [id])
+  reciver Int
+  type String
 }
