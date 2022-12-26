@@ -203,8 +203,8 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
             player1: players[0],
             player2: players[2],
             score: {
-                "player1": this.roomData.get(data.roomName).player1.score,
-                "player2": this.roomData.get(data.roomName).player2.score
+                player1: this.roomData.get(data.roomName).player1.score,
+                player2: this.roomData.get(data.roomName).player2.score
             }
         })
     }
