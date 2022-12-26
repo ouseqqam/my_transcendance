@@ -25,18 +25,29 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         // console.log("connect")
     }
 
-    handleDisconnect(client: Socket){
-        let socketId = client.id
+    handleDisconnect(socket: Socket){
         for (let [key, value] of this.roomData) {
-            for (let i = 0; i < value.length; i++) {
-                if (value[i].player1?.socketId == socketId || value[i].player2?.socketId == socketId) {
-                    this.server.to(key).emit("disconnected", {
-                        "socketId": socketId,
-                        "message": "disconnect"
-                    })
-                    this.roomData.delete(key)
-                    return
-                }
+            if (socket.id == value?.player1?.socketId) {
+                this.server.to(key).emit("leftGame", {
+                    status: "player1 left game",
+                    roomName: key,
+                    socketId: socket.id
+                })
+                clearInterval(value?.interval)
+                this.roomData?.delete(key)
+                console.log("room deleted", key)
+                return
+            }
+            else if (socket.id == value?.player2?.socketId) {
+                this.server.to(key).emit("leftGame", {
+                    status: "player2 left game",
+                    roomName: key,
+                    socketId: socket.id
+                })
+                clearInterval(value?.interval)
+                this.roomData?.delete(key)
+                console.log("room deleted", key)
+                return
             }
         }
     }
@@ -138,12 +149,10 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
 
             if (this.ballIntersectWall(this.roomData.get(data.roomName).ball.position, signalX) == 1){
                 signalX *= -1
-                // console.log("change signal x")
             }
             if (this.ballIntersectPlayer(this.roomData.get(data.roomName).player1, this.roomData.get(data.roomName).ball.position, signalX, signalY) == 1 ||
                     this.ballIntersectPlayer(this.roomData.get(data.roomName).player2, this.roomData.get(data.roomName).ball.position, signalX, signalY) == 1) {
                 signalY *= -1
-                // console.log("change signal y")
             }
             else if (this.ballIntersectPlayer(this.roomData.get(data.roomName).player1, this.roomData.get(data.roomName).ball.position, signalX, signalY) == -1 ||
                         this.ballIntersectPlayer(this.roomData.get(data.roomName).player2, this.roomData.get(data.roomName).ball.position, signalX, signalY) == -1) {
@@ -162,7 +171,6 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
                     this.roomData.delete(data.roomName)
                     return
                 }
-                // console.log("reset")
                 signalX = Math.random() > 0.5 ? 1 : -1
                 signalY = Math.random() > 0.5 ? 1 : -1
             }
@@ -249,5 +257,9 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         let player2 = this.roomData.get(roomName).player2.position
         player1.x = 0
         player2.x = 0
+    }
+
+    sleep(ms: number) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 }
