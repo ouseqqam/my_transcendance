@@ -184,29 +184,27 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         if (!room || !roomName || !socketId)
             return
         
-        if (socketId == room[1].player.socketId) {
-            let player = room[1].player.position
-            if (right && player.x + 3 < w)
-                player.x += 3
-            else if (left && player.x - 3 > -w)
-                player.x -= 3
-            players.push(player, this.roomData.get(data.roomName)[2].player.position)
+        if (socketId == this.roomData.get(roomName).player1.socketId) {
+            if (right && this.roomData.get(roomName).player1.position.x + 3 < w)
+                this.roomData.get(roomName).player1.position.x += 3
+            else if (left && this.roomData.get(roomName).player1.position.x - 3 > -w)
+                this.roomData.get(roomName).player1.position.x -= 3
+            players.push(this.roomData.get(roomName).player1.position, this.roomData.get(data.roomName).player2.position)
         }
-        else if (socketId == room[2].player.socketId) {
-            let player = room[2].player.position
-            if (right && player.x + 3 < w)
-                player.x += 3
-            else if (left && player.x - 3 > -w)
-                player.x -= 3
-                players.push(this.roomData.get(data.roomName)[1].player.position, player)
+        else if (socketId == this.roomData.get(roomName).player2.socketId) {
+            if (right && this.roomData.get(roomName).player2.position.x + 3 < w)
+            this.roomData.get(roomName).player2.position.x += 3
+            else if (left && this.roomData.get(roomName).player2.position.x - 3 > -w)
+            this.roomData.get(roomName).player2.position.x -= 3
+                players.push(this.roomData.get(data.roomName).player1.position, this.roomData.get(roomName).player2.position)
         }
         this.server.to(roomName).emit("gameData", {
-            "ball": this.roomData.get(data.roomName)[0].ball.position,
-            "player1": players[0],
-            "player2": players[2],
+            ball: this.roomData.get(data.roomName).ball.position,
+            player1: players[0],
+            player2: players[2],
             score: {
-                "player1": this.roomData.get(data.roomName)[1].player.score,
-                "player2": this.roomData.get(data.roomName)[2].player.score
+                "player1": this.roomData.get(data.roomName).player1.score,
+                "player2": this.roomData.get(data.roomName).player2.score
             }
         })
     }
