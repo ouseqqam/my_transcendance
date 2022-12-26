@@ -253,13 +253,9 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     }
     
     resetPlayers(roomName: string) {
-        let player1 = this.roomData.get(roomName).player1.position
-        let player2 = this.roomData.get(roomName).player2.position
-        player1.x = 0
-        player2.x = 0
-    }
-
-    sleep(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        this.roomData.get(roomName).player1.position.x = 0
+        this.roomData.get(roomName).player1.position.y = 0
+        this.roomData.get(roomName).player2.position.x = 0
+        this.roomData.get(roomName).player2.position.y = 0
     }
 }
