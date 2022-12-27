@@ -209,7 +209,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         this.server.to(roomName).emit("gameData", {
             ball: this.roomData.get(data.roomName).ball.position,
             player1: players[0],
-            player2: players[2],
+            player2: players[1],
             score: {
                 player1: this.roomData.get(data.roomName).player1.score,
                 player2: this.roomData.get(data.roomName).player2.score
