@@ -186,7 +186,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         const socketId = data.socketId
         const right = data.right
         const left = data.left
-        const w = stage.w / 2 - stage.cRight.args[1] - player1.size / 2
+        const w = stage.w / 2 - stage.cRight.args[1] / 2 - player1.size / 2
         const players = []
 
         if (!room || !roomName || !socketId)
