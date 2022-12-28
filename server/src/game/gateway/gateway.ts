@@ -253,7 +253,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         if (ball1.y + signalY == h1 || ball1.y + signalY == h2) {
             let w = player.position.x  + player1.size / 2
             let w2 = player.position.x - player1.size / 2
-            if (ball1.x + signalX > w2 && ball1.x + signalX < w)
+            if (ball1.x + signalX >= w2 && ball1.x + signalX <= w)
                 return 1
         }
         else {
