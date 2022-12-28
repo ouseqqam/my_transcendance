@@ -66,11 +66,12 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     }
 
     @SubscribeMessage('findGame')
-    reqToJoin(@ConnectedSocket()  socket: Socket) {
+    reqToJoin(@ConnectedSocket()  socket: Socket, @MessageBody() data: any) {
         let exist = 0
         if (this.count == 0) {
             this.roomName = Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36)
             this.roomData.set(this.roomName, {
+                // status: data.status,
                 ball: {
                     position: { x: 0, y: 0, z: 1 },
                     args: [1, 100, 100]
@@ -100,6 +101,13 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
                     position: { x: 0, y: -60 / 2 + 3, z: 0 }
                 },
             })
+            // if (this.roomData.get(this.roomName).status == "private") {
+            //     this.server.to(this.roomName).emit("joinRoom", {
+            //         status: "pending",
+            //         roomName: this.roomName,
+            //     })
+            //     return
+            // }
         }
         else if (this.count == 1 && exist == 0) {
             this.roomData.set(this.roomName, {
@@ -124,7 +132,20 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         }
         this.count++
     }
-
+    
+    @SubscribeMessage('acceptGame')
+    acceptGame(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+        this.roomData.set(this.roomName, {
+            ...this.roomData.get(this.roomName),
+            player2: {
+                socketId: socket.id,
+                score: 0,
+                position: { x: 0, y: 60 / 2 - 3, z: 0 }
+            },
+            watchers: [],
+            interval: 0
+        })
+    }
 
 
     @SubscribeMessage('startGame')
@@ -181,6 +202,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
 
     @SubscribeMessage('paddleMove')
     player1(@MessageBody() data: any) {
+        console.log(data)
         const roomName = data.roomName
         const room = this.roomData.get(roomName)
         const socketId = data.socketId
