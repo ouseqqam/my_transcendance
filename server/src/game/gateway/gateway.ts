@@ -226,9 +226,11 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     }
 
     ballIntersectPlayer(player: any, ball1: any, signalX: number, signalY: number) {
-        if (ball1.y + signalY == player.position.y) {
-            let w = player.position.x  + player1.size / 2 - 0.5 - 1.5 / 2
-            let w2 = player.position.x - player1.size / 2 - 0.5 - 1.5 / 2
+        let h1  = player.position.y + ball.args[0]
+        let h2 = player.position.y - ball.args[0]
+        if (ball1.y + signalY == h1 || ball1.y + signalY == h2) {
+            let w = player.position.x  + player1.size / 2
+            let w2 = player.position.x - player1.size / 2
             if (ball1.x + signalX > w2 && ball1.x + signalX < w)
                 return 1
         }
