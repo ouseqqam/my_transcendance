@@ -1,45 +1,248 @@
+// // This is your Prisma schema file,
+// // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+
+// model User {
+//   id Int @id @default(autoincrement())
+//   username String @unique
+//   firstName String
+//   lastName String
+//   email String
+//   avatar String
+//   sender Friend[] @relation("sender")
+//   reciver Friend[] @relation("reciver")
+//   senderId Notification[] @relation("senderId")
+//   reciverId Notification[] @relation("reciverId")
+//   createdAt DateTime @default(now())
+// }
+
+// model Friend {
+//   id Int @id @default(autoincrement())
+//   sender User @relation("sender",fields: [user1], references: [id])
+//   user1 Int
+//   reciver User @relation("reciver",fields: [user2], references: [id])
+//   user2 Int
+//   accepted Boolean @default(false)
+//   createdAt DateTime @default(now())
+// }
+
+// model Notification {
+//   id Int @id @default(autoincrement())
+//   senderId User @relation("senderId",fields: [sender], references: [id])
+//   sender Int
+//   reciverId User @relation("reciverId",fields: [reciver], references: [id])
+//   reciver Int
+//   type String
+// }
+
+
+
+
+// // This is your Prisma schema file,
+// // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+
+// model User {
+//   id Int @id @default(autoincrement())
+//   username String @unique
+//   firstName String
+//   lastName String
+//   email String
+//   avatar String
+//   sender Friend[] @relation("sender")
+//   reciver Friend[] @relation("reciver")
+//   senderId Notification[] @relation("senderId")
+//   reciverId Notification[] @relation("reciverId")
+//   createdAt DateTime @default(now())
+// }
+
+// model Friend {
+//   id Int @id @default(autoincrement())
+//   sender User @relation("sender",fields: [user1], references: [id])
+//   user1 Int
+//   reciver User @relation("reciver",fields: [user2], references: [id])
+//   user2 Int
+//   accepted Boolean @default(false)
+//   createdAt DateTime @default(now())
+// }
+
+// model Notification {
+//   id Int @id @default(autoincrement())
+//   senderId User @relation("senderId",fields: [sender], references: [id])
+//   sender Int
+//   reciverId User @relation("reciverId",fields: [reciver], references: [id])
+//   reciver Int
+//   type String
+// }
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+    provider        = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider   = "postgresql"
+    url        = env("DATABASE_URL")
 }
-
 
 model User {
-  id Int @id @default(autoincrement())
-  username String @unique
-  firstName String
-  lastName String
-  email String
-  avatar String
-  sender Friend[] @relation("sender")
-  reciver Friend[] @relation("reciver")
-  senderId Notification[] @relation("senderId")
-  reciverId Notification[] @relation("reciverId")
-  createdAt DateTime @default(now())
+    id           Int     @id @default(autoincrement())
+    // intraId      Int?    @unique @map("intra_id")
+    // login        String  @unique @db.VarChar(10)
+    email        String? @unique
+    firstName    String? @map("first_name") @db.VarChar(50)
+    lastName     String? @map("last_name") @db.VarChar(50)
+    userName     String? @unique @map("user_name") @db.VarChar(50)
+    imageUrl     String  @map("image_url") @db.VarChar(100)
+    tfaSecret    String? @unique @map("tfa_secret")
+    isTfaEnabled Boolean @default(false) @map("is_tfa_enabled")
+
+    friends           User[]          @relation("friends")
+    friedsBy          User[]          @relation("friends")
+    bannedUsers       User[]          @relation("banned_users")
+    bannedBy          User[]          @relation("banned_users")
+    // profile           Profile?
+    friendRequestFrom FriendRequest[] @relation("friend_request_from")
+    friendRequestTo   FriendRequest[] @relation("friend_request_to")
+    // conversationsAdmin  Conversation[]  @relation("admins")
+    // conversationsMember Conversation[]  @relation("members")
+    createdAt         DateTime        @default(now()) @map("created_at")
+    updatedAt         DateTime        @updatedAt @map("updated_at")
+
+    messages       Message[]       @relation("user_messages")
+    User_Conv      User_Conv[]
+    Profile        Profile?
+    FriendRequest  FriendRequest[]
+    Conversation   Conversation?   @relation(fields: [conversationId], references: [id])
+    conversationId Int?
+
+    @@map(name: "user")
 }
 
-model Friend {
-  id Int @id @default(autoincrement())
-  sender User @relation("sender",fields: [user1], references: [id])
-  user1 Int
-  reciver User @relation("reciver",fields: [user2], references: [id])
-  user2 Int
-  accepted Boolean @default(false)
-  createdAt DateTime @default(now())
+model FriendRequest {
+    id        Int      @id @default(autoincrement())
+    from      User     @relation("friend_request_from", fields: [fromId], references: [id])
+    fromId    Int      @map("from_id")
+    to        User     @relation("friend_request_to", fields: [toId], references: [id])
+    toId      Int      @map("to_id")
+    status    Int      @default(0) // 0: pending, 1: accepted, 2: rejected
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    User      User?    @relation(fields: [userId], references: [id])
+    userId    Int?
+
+    @@unique([fromId, toId], name: "friend_request_from_to")
+    @@map(name: "friend_request")
 }
 
-model Notification {
-  id Int @id @default(autoincrement())
-  senderId User @relation("senderId",fields: [sender], references: [id])
-  sender Int
-  reciverId User @relation("reciverId",fields: [reciver], references: [id])
-  reciver Int
-  type String
+model Profile {
+    id            Int     @id @default(autoincrement())
+    status        Int     @default(0) // 0 : offline, 1 : online, 2 : in-game
+    points        Int     @default(0)
+    userId        Int     @unique @map("user_id")
+    user          User    @relation(fields: [userId], references: [id])
+    winStrike     Int     @default(0)
+    matchesWon    Match[] @relation("won")
+    matchesLose   Match[] @relation("lost")
+    matchesHosted Match[] @relation("host")
+    matchesJoined Match[] @relation("guest")
+
+    @@map(name: "profile")
+}
+
+model Match {
+    id         Int      @id @default(autoincrement())
+    status     Int      @default(0) // 0 : waiting, 1 : in-progress, 2 : finished
+    winnerId   Int?     @map("winner_id")
+    loserId    Int?     @map("loser_id")
+    winner     Profile? @relation("won", fields: [winnerId], references: [id])
+    loser      Profile? @relation("lost", fields: [loserId], references: [id])
+    host       Profile  @relation("host", fields: [hostId], references: [id])
+    hostId     Int      @map("host_id")
+    guest      Profile? @relation("guest", fields: [guestId], references: [id])
+    guestId    Int?     @map("guest_id")
+    hostScore  Int      @default(0) @map("host_score")
+    guestScore Int      @default(0) @map("guest_score")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map(name: "match")
+}
+
+//this enum describs the room status
+enum roomStatus {
+    PUBLIC
+    PROTECTED
+    PRIVATE
+}
+
+model Conversation {
+    // participants User[]
+    id        Int         @id @default(autoincrement())
+    ident     String      @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    type      String // dm or room
+    name      String      @unique
+    status    roomStatus  @default(PUBLIC) // 0: public, 1: private , 2: locked
+    password  String?
+    // admins    User[]      @relation("admins")
+    // members   User[]      @relation("members")
+    createdAt DateTime    @default(now())
+    messages  Message[]
+    User_Conv User_Conv[]
+    User      User[]
+
+    @@map("conversation") //to access it as prisma.conversations
+}
+
+model User_Conv {
+    //add state of a user is it banned or muted
+    id Int @id @default(autoincrement())
+
+    userId Int
+    user   User @relation(fields: [userId], references: [id])
+
+    conversationId Int
+    conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+    is_admin Boolean // true or false i sadmin of user
+    is_owner Boolean //true or false of room 
+    status   String  //banned/blocke or muted  
+
+    @@unique([userId, conversationId])
+    @@map("user_Conv")
+}
+
+model Message {
+    id             Int      @id @default(autoincrement())
+    senderId       Int
+    conversationId Int
+    body           String
+    createdAt      DateTime @default(now()) @map("created_at")
+    updatedAt      DateTime @updatedAt @map("updated_at")
+
+    conversation Conversation @relation(fields: [conversationId], references: [id])
+    sentBy       User         @relation("user_messages", fields: [senderId], references: [id])
+
+    @@map("message")
 }

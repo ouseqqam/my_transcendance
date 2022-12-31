@@ -1,25 +1,27 @@
 import { Module } from '@nestjs/common';
-import { UserModule } from './user/user.module';
+// import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './auth/auth.module';
+// import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
-import { FriendModule } from './friend/friend.module';
-import { InvitationModule } from './invitation/invitation.module';
+// import { FriendModule } from './friend/friend.module';
+// import { InvitationModule } from './invitation/invitation.module';
 import { GatwayModule } from './game/gateway/gateway.module';
-import { NotificationModule } from './notification/notification.module';
+// import { NotificationModule } from './notification/notification.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    UserModule,
-    AuthModule,
-    PrismaModule,
-    FriendModule,
-    InvitationModule,
+    // UserModule,
+    // AuthModule,
+     PrismaModule,
+    // FriendModule,
+    // InvitationModule,
     GatwayModule,
-    NotificationModule,
+    ChatModule,
+    // NotificationModule,
   ],
   //  providers: [UserService, FriendService],
 })

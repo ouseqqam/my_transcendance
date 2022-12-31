@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class PrismaService extends PrismaClient {
+    user_conv: any;
     constructor (config: ConfigService) {
         super({
             datasources: {
