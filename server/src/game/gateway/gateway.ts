@@ -29,11 +29,14 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     handleDisconnect(socket: Socket){
         for (let [key, value] of this.roomData) {
             if (socket.id == value?.player1?.socketId) {
+                if (value?.status2  == 'pending') {
+                    this.roomData?.delete(key)
+                }
                 this.server.to(key).emit("leftGame", {
                     status: "gameOver",
                     roomName: key,
-                    loser: "player1 left game",
-                    socketId: socket.id
+                    player1: '',
+                    player2: value?.player2,
                 })
                 clearInterval(value?.interval)
                 this.roomData?.delete(key)
@@ -44,8 +47,8 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
                 this.server.to(key).emit("leftGame", {
                     status: "gameOver",
                     roomName: key,
-                    loser: "player2 left game",
-                    socketId: socket.id
+                    player1: value?.player1,
+                    player2: '',
                 })
                 clearInterval(value?.interval)
                 this.roomData?.delete(key)
@@ -108,6 +111,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
             if (data && data.receiverId) {
                 this.roomData.set(this.roomName, {
                     status: "private",
+                    status2: "pending",
                     ...this.roomData.get(this.roomName),
                     player2: data.receiverId,
                     watchers: [],
@@ -120,6 +124,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         else if (this.count == 1 && exist == 0) {
             this.roomData.set(this.roomName, {
                 status: "public",
+                status2: "pending",
                 ...this.roomData.get(this.roomName),
                 player2: {
                     socketId: socket.id,
@@ -173,6 +178,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         let signalY = Math.random() > 0.5 ? 1 : -1
 
         this.roomData.get(data.roomName).interval = setInterval(() => {
+            this.roomData.get(data.roomName).status2 = "started"
             this.server.to(data.roomName).emit("gameData", {
                 status: "start",
                 ball: this.roomData.get(data.roomName).ball.position,
