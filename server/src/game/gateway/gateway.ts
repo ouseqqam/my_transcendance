@@ -1,3 +1,4 @@
+import { Body } from "@nestjs/common";
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from 'socket.io'
 import { ball, player1, player2, stage } from './data'
@@ -55,7 +56,8 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     }
 
     @SubscribeMessage('joinToRoom')
-    JoinToRoom(roomName: string, @ConnectedSocket() socket: Socket) {
+    JoinToRoom(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+        let roomName = data.roomName
         socket.join(roomName)
         let socketArray = this.roomData.get(roomName)
         if (socketArray) {
