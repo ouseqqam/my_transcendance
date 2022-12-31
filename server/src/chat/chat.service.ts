@@ -6,7 +6,7 @@ import { PrismaService } from 'src/prisma/prisma.service'
 export class ChatService {
     constructor(private prisma: PrismaService) {}
 
-    async user(body, res) {
+    async banUser(body, res) {
        const adminId = 1
         const { userId, conversationId, status } = body
         try {
@@ -60,7 +60,66 @@ export class ChatService {
                 }
             })
             if (!bannedUser) return res.send({message: "User not found in conversation"})
-            return res.send({message: "User are " + status + " successfully"})
+            res.send({message: "User are " + status + " successfully"})
+
+            const interval = setInterval(async () => {
+                const unbannedUser = await this.prisma.user_Conv.update({
+                    where: {
+                        userId_conversationId: {
+                            userId: userId,
+                            conversationId: conversationId
+                        }
+                    },
+                    data: {
+                        status: 'active'
+                    }
+                })
+                if (unbannedUser) {
+                    clearInterval(interval)
+                }
+            }, 1000 * 60 * 5)
+        } catch (error) {
+            console.log(error)
+            return res.send({message: "Something went wrong"})
+        }
+    }
+
+    async checkUserStatus(body, res) {
+        const { userId, conversationId } = body
+        const adminId = 1
+        try {
+            const admin = await this.prisma.user.findUnique({
+                where: {
+                    id: adminId
+                }
+            })
+            if (!admin) return res.send({message: "User not found"})
+
+            const isAdmin = await this.prisma.user_Conv.findMany({
+                where: {
+                    userId: adminId,
+                    conversationId,
+                    is_admin: true
+                }
+            })
+            if (!isAdmin.length) return res.send({message: "You need to be an admin to get banned users"})
+
+            const bannedUsers = await this.prisma.user_Conv.findMany({
+                where: {
+                    userId,
+                    conversationId,
+                    OR: [
+                        {
+                            status: 'mute'
+                        },
+                        {
+                            status: 'block'
+                        }
+                    ]
+                }
+            })
+            if (bannedUsers.length > 0) return res.send({message: "this user is banned"})
+            res.send({message: "this user is not banned"})
         } catch (error) {
             console.log(error)
             return res.send({message: "Something went wrong"})
