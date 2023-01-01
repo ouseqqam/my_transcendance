@@ -2,6 +2,7 @@ import { Body } from "@nestjs/common";
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from 'socket.io'
 import { ball, player1, player2, stage } from './data'
+import { gameDto } from "./gameDto";
 
 @WebSocketGateway({
     cors: {
@@ -59,21 +60,21 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     }
 
     @SubscribeMessage('joinToRoom')
-    JoinToRoom(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    JoinToRoom(@MessageBody() data: gameDto, @ConnectedSocket() socket: Socket) {
         let roomName = data.roomName
-        socket.join(roomName)
-        let socketArray = this.roomData.get(roomName)
+        socket.join(data.roomName)
+        let socketArray = this.roomData.get(data.roomName)
         if (socketArray) {
-            socketArray[3].watchers.push(socket.id)
+            this.roomData.get(data.roomName).watchers.push(socket.id)
+            this.server.to(roomName).emit("watcher", {
+                "socketId": socket.id,
+                "message": "joined to room"
+            })
         }
-        this.server.to(roomName).emit("watcher", {
-            "socketId": socket.id,
-            "message": "joined to room"
-        })
     }
 
     @SubscribeMessage('findGame')
-    reqToJoin(@ConnectedSocket()  socket: Socket, @MessageBody() data: any) {
+    reqToJoin(@ConnectedSocket()  socket: Socket, @MessageBody() data: gameDto) {
         let exist = 0
         if (this.count == 0) {
             this.roomName = Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36)
@@ -148,7 +149,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     }
     
     @SubscribeMessage('acceptGame')
-    acceptGame(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    acceptGame(@MessageBody() data: gameDto, @ConnectedSocket() socket: Socket) {
         let room = this.roomData.get(data.roomName)
         let roomName = data.roomName
         let player2Id = room.player2.socketId
@@ -168,7 +169,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
 
 
     @SubscribeMessage('startGame')
-    startGame(@MessageBody() data: any) {
+    startGame(@MessageBody() data: gameDto) {
         let room = this.roomData.get(data.roomName)
         let roomName = data.roomName
         let speed = 1
@@ -226,7 +227,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
     }
 
     @SubscribeMessage('paddleMove')
-    paddleMove(@MessageBody() data: any) {
+    paddleMove(@MessageBody() data: gameDto) {
         const roomName = data.roomName
         const room = this.roomData.get(roomName)
         const socketId = data.socketId
@@ -313,3 +314,6 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         }, 3000)
     }
 }
+
+
+

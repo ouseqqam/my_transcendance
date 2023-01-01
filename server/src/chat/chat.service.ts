@@ -6,6 +6,8 @@ import { PrismaService } from 'src/prisma/prisma.service'
 export class ChatService {
     constructor(private prisma: PrismaService) {}
 
+    intervals = new Map<string, any>()
+
     async banUser(body, res) {
        const adminId = 1
         const { userId, conversationId, status } = body
@@ -62,7 +64,7 @@ export class ChatService {
             if (!bannedUser) return res.send({message: "User not found in conversation"})
             res.send({message: "User are " + status + " successfully"})
 
-            const interval = setInterval(async () => {
+            this.intervals.set(userId, setInterval(async () => {
                 const unbannedUser = await this.prisma.user_Conv.update({
                     where: {
                         userId_conversationId: {
@@ -75,9 +77,10 @@ export class ChatService {
                     }
                 })
                 if (unbannedUser) {
-                    clearInterval(interval)
+                    clearInterval(this.intervals.get(userId))
+                    this.intervals.delete(userId)
                 }
-            }, 1000 * 60 * 5)
+            }, 1000 * 60 * 5))
         } catch (error) {
             console.log(error)
             return res.send({message: "Something went wrong"})

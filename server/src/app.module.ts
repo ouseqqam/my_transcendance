@@ -5,7 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 // import { FriendModule } from './friend/friend.module';
 // import { InvitationModule } from './invitation/invitation.module';
-import { GatwayModule } from './game/gateway/gateway.module';
+import { GatwayModule } from './game/gateway.module';
 // import { NotificationModule } from './notification/notification.module';
 import { ChatModule } from './chat/chat.module';
 
