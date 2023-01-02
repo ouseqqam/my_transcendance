@@ -146,6 +146,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
             })
         }
         this.count++
+        console.log(this.roomData)
     }
     
     @SubscribeMessage('acceptGame')
