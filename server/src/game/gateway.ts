@@ -214,7 +214,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
                         player2: this.roomData.get(data.roomName).player2.score
                     })
                     speed = this.roomData.get(data.roomName).ball.speed
-                    this.speedUpBall(data.roomName)
+                    // this.speedUpBall(data.roomName)
                     clearInterval(this.roomData.get(data.roomName).interval)
                     this.roomData.delete(data.roomName)
                     return
@@ -283,8 +283,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
             if (ball1.x + signalX >= w2 && ball1.x + signalX <= w)
                 return 1
         }
-        else {
-            
+        else { 
             if (player.position.y > 0) {
                 if (ball1.y + signalY > player.position.y) {
                     return -1
@@ -308,12 +307,12 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
         this.roomData.get(roomName).player2.position.x = 0
     }
 
-    speedUpBall(roomName: string) {
-        setInterval(() => {
-            if (this.roomData.get(roomName).ball.speed < 10)
-                this.roomData.get(roomName).ball.speed += 0.5
-        }, 3000)
-    }
+    // speedUpBall(roomName: string) {
+    //     setInterval(() => {
+    //         if (this.roomData.get(roomName).ball.speed < 10)
+    //             this.roomData.get(roomName).ball.speed += 0.5
+    //     }, 3000)
+    // }
 }
 
 
