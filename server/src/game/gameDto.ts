@@ -2,8 +2,9 @@ export class gameDto {
     roomName?: string;
     socketId?: string;
     receiverId?: string;
-    right?: boolean;
-    left?: boolean;
+    right?: boolean
+    left?: boolean
+    dificulty: string
 }
 
 export type postion = {
