@@ -178,7 +178,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection{
             return
         
         if (this.roomData.get(data.roomName).status2 == 'gameOver') {
-            this.roomData.get(data.roomName).status2 = 'started'
+            this.roomData.get(data.roomName).status = 'started'
             this.roomData.get(data.roomName).player1.score = 0
             this.roomData.get(data.roomName).player2.score = 0
             this.resetBall(data.roomName)

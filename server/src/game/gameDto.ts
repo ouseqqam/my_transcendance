@@ -1,9 +1,18 @@
+import { IsBoolean, IsString } from "class-validator"
+
+
 export class gameDto {
-    roomName?: string;
-    socketId?: string;
-    receiverId?: string;
+    @IsString()
+    roomName?: string
+    @IsString()
+    socketId?: string
+    @IsString()
+    receiverId?: string
+    @IsBoolean()
     right?: boolean
+    @IsBoolean()
     left?: boolean
+    @IsBoolean()
     dificulty: string
 }
 
