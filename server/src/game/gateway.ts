@@ -17,7 +17,7 @@ import { gameDto } from './gameDto';
     origin: '*',
   },
 })
-export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
+export class Mygeteway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
