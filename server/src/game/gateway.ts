@@ -164,10 +164,10 @@ export class Mygeteway implements OnGatewayConnection {
 
   @SubscribeMessage('acceptGame')
   acceptGame(@MessageBody() data: gameDto, @ConnectedSocket() socket: Socket) {
-    let room = this.roomData.get(data.roomName);
-    let roomName = data.roomName;
-    let player2Id = room.player2.socketId;
-    let id = 1;
+    let room = this.roomData.get(data.roomName)
+    let roomName = data.roomName
+    let player2Id = room.player2.socketId
+    let id = 1
     if (!room || !roomName || player2Id != room.player2) return;
     this.roomData.set(data.roomName, {
       ...this.roomData.get(data.roomName),
@@ -176,7 +176,7 @@ export class Mygeteway implements OnGatewayConnection {
         score: 0,
         position: { x: 0, y: 60 / 2 - 3, z: 0 },
       },
-    });
+    })
   }
 
   @SubscribeMessage('startGame')

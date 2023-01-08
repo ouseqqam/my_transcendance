@@ -1,98 +1,3 @@
-// // This is your Prisma schema file,
-// // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// generator client {
-//   provider = "prisma-client-js"
-// }
-
-// datasource db {
-//   provider = "postgresql"
-//   url      = env("DATABASE_URL")
-// }
-
-
-// model User {
-//   id Int @id @default(autoincrement())
-//   username String @unique
-//   firstName String
-//   lastName String
-//   email String
-//   avatar String
-//   sender Friend[] @relation("sender")
-//   reciver Friend[] @relation("reciver")
-//   senderId Notification[] @relation("senderId")
-//   reciverId Notification[] @relation("reciverId")
-//   createdAt DateTime @default(now())
-// }
-
-// model Friend {
-//   id Int @id @default(autoincrement())
-//   sender User @relation("sender",fields: [user1], references: [id])
-//   user1 Int
-//   reciver User @relation("reciver",fields: [user2], references: [id])
-//   user2 Int
-//   accepted Boolean @default(false)
-//   createdAt DateTime @default(now())
-// }
-
-// model Notification {
-//   id Int @id @default(autoincrement())
-//   senderId User @relation("senderId",fields: [sender], references: [id])
-//   sender Int
-//   reciverId User @relation("reciverId",fields: [reciver], references: [id])
-//   reciver Int
-//   type String
-// }
-
-
-
-
-// // This is your Prisma schema file,
-// // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// generator client {
-//   provider = "prisma-client-js"
-// }
-
-// datasource db {
-//   provider = "postgresql"
-//   url      = env("DATABASE_URL")
-// }
-
-
-// model User {
-//   id Int @id @default(autoincrement())
-//   username String @unique
-//   firstName String
-//   lastName String
-//   email String
-//   avatar String
-//   sender Friend[] @relation("sender")
-//   reciver Friend[] @relation("reciver")
-//   senderId Notification[] @relation("senderId")
-//   reciverId Notification[] @relation("reciverId")
-//   createdAt DateTime @default(now())
-// }
-
-// model Friend {
-//   id Int @id @default(autoincrement())
-//   sender User @relation("sender",fields: [user1], references: [id])
-//   user1 Int
-//   reciver User @relation("reciver",fields: [user2], references: [id])
-//   user2 Int
-//   accepted Boolean @default(false)
-//   createdAt DateTime @default(now())
-// }
-
-// model Notification {
-//   id Int @id @default(autoincrement())
-//   senderId User @relation("senderId",fields: [sender], references: [id])
-//   sender Int
-//   reciverId User @relation("reciverId",fields: [reciver], references: [id])
-//   reciver Int
-//   type String
-// }
-
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -135,6 +40,9 @@ model User {
     FriendRequest  FriendRequest[]
     Conversation   Conversation?   @relation(fields: [conversationId], references: [id])
     conversationId Int?
+
+    notificationSender Notification[] @relation("notification_sender")
+    notificationReceiver   Notification[] @relation("notification_receveir")
 
     @@map(name: "user")
 }
@@ -245,4 +153,19 @@ model Message {
     sentBy       User         @relation("user_messages", fields: [senderId], references: [id])
 
     @@map("message")
+}
+
+model Notification {
+    id          Int      @id @default(autoincrement())
+    senderId    Int
+    notificationSender User @relation("notification_sender", fields: [senderId], references: [id])
+    receiverId  Int
+    notificationReceiver User @relation("notification_receveir", fields: [receiverId], references: [id])
+    type      String   // friend request, message
+    // status    Int      @default(0) // 0: unread, 1: read
+    roomId   String?
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("notification")
 }
