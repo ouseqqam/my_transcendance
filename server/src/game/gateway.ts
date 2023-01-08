@@ -68,23 +68,32 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   JoinToRoom(@MessageBody() data: gameDto, @ConnectedSocket() socket: Socket) {
     let roomName = data.roomName;
     console.log('name', roomName);
-    let socketArray = this.roomData.get(data.roomName)
-    console.log('ARRAY', socketArray)
-    if (!socketArray) return socket.emit('error')
+    let socketArray = this.roomData.get(data.roomName);
+    console.log('ARRAY', socketArray);
+    if (!socketArray) return socket.emit('error');
     if (
       socketArray.player1.socketId != socket.id &&
       socketArray.player2.socketId != socket.id &&
       !socketArray.watchers.includes(socket.id)
     ) {
-      console.log('Dkhalt')
+      console.log('Dkhalt');
       this.roomData.get(data.roomName).watchers.push(socket.id);
-      socket.join(data.roomName)
+      socket.join(data.roomName);
       this.server.to(roomName).emit('watcher', {
         socketId: socket.id,
       });
     }
   }
-
+  // if the user change the page in the front side we must kick it from the room
+  @SubscribeMessage('leftRoom')
+  leftRoom(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    let roomName = data.roomName;
+    console.log('name', roomName);
+    let socketArray = this.roomData.get(data.roomName);
+    this.roomData.set(this.roomName, {
+      watchers: socketArray.watchers.filter((e: string) => e != socket.id),
+    });
+  }
   @SubscribeMessage('findGame')
   reqToJoin(@ConnectedSocket() socket: Socket, @MessageBody() data: gameDto) {
     let exist = 0;
