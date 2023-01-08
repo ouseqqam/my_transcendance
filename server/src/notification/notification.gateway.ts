@@ -2,6 +2,7 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, OnGat
 import { copyFileSync } from 'fs';
 import { Socket } from 'socket.io'
 import { PrismaService } from 'src/prisma/prisma.service';
+import { notificationDto } from './notification.Dto';
 // import { NotificationService } from './notification.service';
 
 
@@ -15,7 +16,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class NotificationGateway  implements OnGatewayConnection {
     constructor(private prisma: PrismaService) {}
 
-    userSocket = new Map<any, any>()
+    userSocket = new Map<number, [Socket]>()
 
     handleConnection(socket: Socket) {
       const userId = 2
@@ -37,7 +38,7 @@ export class NotificationGateway  implements OnGatewayConnection {
     }
 
     @SubscribeMessage('enviteToRoom')
-    async enviteToChatRoom(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    async enviteToChatRoom(@MessageBody() data: notificationDto, @ConnectedSocket() socket: Socket) {
       if (!data )
         return
       // console.log(data)
