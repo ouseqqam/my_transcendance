@@ -70,7 +70,8 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
     console.log('name', roomName);
     let socketArray = this.roomData.get(data.roomName);
     console.log('ARRAY', socketArray);
-    if (!socketArray) return socket.emit('error');
+    if (!socketArray || socketArray.status2 == 'gameOver')
+      return socket.emit('error');
     if (
       socketArray.player1.socketId != socket.id &&
       socketArray.player2.socketId != socket.id &&
@@ -81,17 +82,51 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
       socket.join(data.roomName);
       this.server.to(roomName).emit('watcher', {
         socketId: socket.id,
+        roomName,
+        watchersRoom: socketArray.watchers,
       });
     }
   }
   // if the user change the page in the front side we must kick it from the room
   @SubscribeMessage('leftRoom')
-  leftRoom(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
-    let roomName = data.roomName;
-    console.log('name', roomName);
-    let socketArray = this.roomData.get(data.roomName);
+  leftRoom(
+    @MessageBody() data: { roomName: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const { roomName } = data;
+
+    let socketArray = this.roomData.get(roomName);
+    if (!socketArray) return socket.emit('error');
+    console.log('LEFTROOM', socket.id, socketArray);
+    // If one of the players leave
+    if (socketArray.player1.socketId == socket.id) {
+      socket.leave(roomName);
+      console.log('PLAYER1 khroj t9awd');
+      this.roomData?.delete(roomName);
+      return socket.to(roomName).emit('leftGame', {
+        status: 'gameOver',
+        player2: socketArray.player2.socketId,
+        player1: '',
+      });
+    }
+    if (socketArray.player2.socketId == socket.id) {
+      socket.leave(roomName);
+      this.roomData?.delete(roomName);
+      console.log('PLAYER2 khroj t9awd');
+      return socket.to(roomName).emit('leftGame', {
+        status: 'gameOver',
+        player1: socketArray.player1.socketId,
+        player2: '',
+      });
+    }
+    // If one of the watchers leave
     this.roomData.set(this.roomName, {
       watchers: socketArray.watchers.filter((e: string) => e != socket.id),
+    });
+    socket.leave(roomName);
+    return socket.to(roomName).emit('watcher', {
+      socketId: socket.id,
+      type: 'LEAVE',
     });
   }
   @SubscribeMessage('findGame')
@@ -187,7 +222,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
       },
     });
   }
-
+  // i need to clean thios code
   @SubscribeMessage('startGame')
   startGame(@MessageBody() data: gameDto) {
     let room = this.roomData.get(data.roomName);
