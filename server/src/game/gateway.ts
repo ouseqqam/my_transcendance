@@ -70,8 +70,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
     console.log('name', roomName);
     const room = this.roomData.get(data.roomName);
     console.log('ARRAY', room);
-    if (!room || room.status2 == 'gameOver')
-      return socket.emit('error');
+    if (!room || room.status2 == 'gameOver') return socket.emit('error');
     if (
       room.player1.socketId != socket.id &&
       room.player2.socketId != socket.id &&
@@ -260,12 +259,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
         },
       });
 
-      if (
-        this.ballIntersectWall(
-          room.ball.position,
-          signalX,
-        ) == 1
-      ) {
+      if (this.ballIntersectWall(room.ball.position, signalX) == 1) {
         signalX *= -1;
       }
       if (
@@ -297,16 +291,11 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
           signalY,
         ) == -1
       ) {
-        if (room.ball.position.y > 0)
-          room.player1.score++;
-        else if (room.ball.position.y < 0)
-          room.player2.score++;
+        if (room.ball.position.y > 0) room.player1.score++;
+        else if (room.ball.position.y < 0) room.player2.score++;
         this.resetBall(data.roomName);
         this.resetPlayers(data.roomName);
-        if (
-          room.player1.score == 10 ||
-          room.player2.score == 10
-        ) {
+        if (room.player1.score == 10 || room.player2.score == 10) {
           this.server.to(data.roomName).emit('gameOver', {
             status: 'gameOver',
             player1: room.player1.score,
@@ -341,19 +330,13 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
         room.player1.position.x += 3;
       else if (left && room.player1.position.x - 3 > -w)
         room.player1.position.x -= 3;
-      players.push(
-        room.player1.position,
-        room.player2.position,
-      );
+      players.push(room.player1.position, room.player2.position);
     } else if (socketId == room.player2.socketId) {
       if (right && room.player2.position.x + 3 < w)
         room.player2.position.x += 3;
       else if (left && room.player2.position.x - 3 > -w)
         room.player2.position.x -= 3;
-      players.push(
-        room.player1.position,
-        room.player2.position,
-      );
+      players.push(room.player1.position, room.player2.position);
     }
     this.server.to(roomName).emit('gameData', {
       status: 'start',
@@ -399,7 +382,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   }
 
   resetBall(roomName: string) {
-    const room = this.roomData.get(roomName)
+    const room = this.roomData.get(roomName);
     room.ball.position.x = 0;
     room.ball.position.y = 0;
   }
