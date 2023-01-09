@@ -1,5 +1,4 @@
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, OnGatewayConnection } from '@nestjs/websockets';
-import { copyFileSync } from 'fs';
 import { Socket } from 'socket.io'
 import { PrismaService } from 'src/prisma/prisma.service';
 import { notificationDto } from './notification.Dto';
