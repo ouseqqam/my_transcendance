@@ -66,16 +66,16 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
 
   @SubscribeMessage('joinToRoom')
   JoinToRoom(@MessageBody() data: gameDto, @ConnectedSocket() socket: Socket) {
-    let roomName = data.roomName;
+    const roomName = data.roomName;
     console.log('name', roomName);
-    let socketArray = this.roomData.get(data.roomName);
-    console.log('ARRAY', socketArray);
-    if (!socketArray || socketArray.status2 == 'gameOver')
+    const room = this.roomData.get(data.roomName);
+    console.log('ARRAY', room);
+    if (!room || room.status2 == 'gameOver')
       return socket.emit('error');
     if (
-      socketArray.player1.socketId != socket.id &&
-      socketArray.player2.socketId != socket.id &&
-      !socketArray.watchers.includes(socket.id)
+      room.player1.socketId != socket.id &&
+      room.player2.socketId != socket.id &&
+      !room.watchers.includes(socket.id)
     ) {
       console.log('Dkhalt');
       this.roomData.get(data.roomName).watchers.push(socket.id);
@@ -83,7 +83,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
       this.server.to(roomName).emit('watcher', {
         socketId: socket.id,
         roomName,
-        watchersRoom: socketArray.watchers,
+        watchersRoom: room.watchers,
       });
     }
   }
@@ -95,33 +95,32 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   ) {
     const { roomName } = data;
 
-    let socketArray = this.roomData.get(roomName);
-    if (!socketArray) return socket.emit('error');
-    console.log('LEFTROOM', socket.id, socketArray);
+    const room = this.roomData.get(roomName);
+    if (!room) return socket.emit('error');
+    console.log('LEFTROOM', socket.id, room);
     // If one of the players leave
-    if (socketArray.player1.socketId == socket.id) {
+    if (room.player1.socketId == socket.id) {
       socket.leave(roomName);
-      console.log('PLAYER1 khroj t9awd');
       this.roomData?.delete(roomName);
       return socket.to(roomName).emit('leftGame', {
         status: 'gameOver',
-        player2: socketArray.player2.socketId,
+        player2: room.player2.socketId,
         player1: '',
       });
     }
-    if (socketArray.player2.socketId == socket.id) {
+    if (room.player2.socketId == socket.id) {
       socket.leave(roomName);
       this.roomData?.delete(roomName);
       console.log('PLAYER2 khroj t9awd');
       return socket.to(roomName).emit('leftGame', {
         status: 'gameOver',
-        player1: socketArray.player1.socketId,
+        player1: room.player1.socketId,
         player2: '',
       });
     }
     // If one of the watchers leave
     this.roomData.set(this.roomName, {
-      watchers: socketArray.watchers.filter((e: string) => e != socket.id),
+      watchers: room.watchers.filter((e: string) => e != socket.id),
     });
     socket.leave(roomName);
     return socket.to(roomName).emit('watcher', {
@@ -129,6 +128,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
       type: 'LEAVE',
     });
   }
+
   @SubscribeMessage('findGame')
   reqToJoin(@ConnectedSocket() socket: Socket, @MessageBody() data: gameDto) {
     let exist = 0;
@@ -225,44 +225,44 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   // i need to clean thios code
   @SubscribeMessage('startGame')
   startGame(@MessageBody() data: gameDto) {
-    let room = this.roomData.get(data.roomName);
-    let roomName = data.roomName;
-    let speed = 0.5;
+    const room = this.roomData.get(data.roomName);
+    const roomName = data.roomName;
+    const speed = 0.5;
     let time = 20;
 
     if (!room || !roomName) return;
 
-    if (this.roomData.get(data.roomName).status2 == 'gameOver') {
-      this.roomData.get(data.roomName).status = 'started';
-      this.roomData.get(data.roomName).player1.score = 0;
-      this.roomData.get(data.roomName).player2.score = 0;
+    if (room.status2 == 'gameOver') {
+      room.status = 'started';
+      room.player1.score = 0;
+      room.player2.score = 0;
       this.resetBall(data.roomName);
       this.resetPlayers(data.roomName);
     }
     let signalX = Math.random() > 0.5 ? speed : -speed;
     let signalY = Math.random() > 0.5 ? speed : -speed;
 
-    if (this.roomData.get(data.roomName).status == 'private') {
-      if (this.roomData.get(data.roomName).dificulty == 'hard') time = 15;
-      else if (this.roomData.get(data.roomName).dificulty == 'easy') time = 30;
+    if (room.status == 'private') {
+      if (room.dificulty == 'hard') time = 15;
+      else if (room.dificulty == 'easy') time = 30;
     }
 
-    this.roomData.get(data.roomName).interval = setInterval(() => {
-      this.roomData.get(data.roomName).status2 = 'started';
+    room.interval = setInterval(() => {
+      room.status2 = 'started';
       this.server.to(data.roomName).emit('gameData', {
         status: 'start',
-        ball: this.roomData.get(data.roomName).ball.position,
-        player1: this.roomData.get(data.roomName).player1.position,
-        player2: this.roomData.get(data.roomName).player2.position,
+        ball: room.ball.position,
+        player1: room.player1.position,
+        player2: room.player2.position,
         score: {
-          player1: this.roomData.get(data.roomName).player1.score,
-          player2: this.roomData.get(data.roomName).player2.score,
+          player1: room.player1.score,
+          player2: room.player2.score,
         },
       });
 
       if (
         this.ballIntersectWall(
-          this.roomData.get(data.roomName).ball.position,
+          room.ball.position,
           signalX,
         ) == 1
       ) {
@@ -270,14 +270,14 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
       }
       if (
         this.ballIntersectPlayer(
-          this.roomData.get(data.roomName).player1,
-          this.roomData.get(data.roomName).ball.position,
+          room.player1,
+          room.ball.position,
           signalX,
           signalY,
         ) == 1 ||
         this.ballIntersectPlayer(
-          this.roomData.get(data.roomName).player2,
-          this.roomData.get(data.roomName).ball.position,
+          room.player2,
+          room.ball.position,
           signalX,
           signalY,
         ) == 1
@@ -285,42 +285,42 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
         signalY *= -1;
       } else if (
         this.ballIntersectPlayer(
-          this.roomData.get(data.roomName).player1,
-          this.roomData.get(data.roomName).ball.position,
+          room.player1,
+          room.ball.position,
           signalX,
           signalY,
         ) == -1 ||
         this.ballIntersectPlayer(
-          this.roomData.get(data.roomName).player2,
-          this.roomData.get(data.roomName).ball.position,
+          room.player2,
+          room.ball.position,
           signalX,
           signalY,
         ) == -1
       ) {
-        if (this.roomData.get(data.roomName).ball.position.y > 0)
-          this.roomData.get(data.roomName).player1.score++;
-        else if (this.roomData.get(data.roomName).ball.position.y < 0)
-          this.roomData.get(data.roomName).player2.score++;
+        if (room.ball.position.y > 0)
+          room.player1.score++;
+        else if (room.ball.position.y < 0)
+          room.player2.score++;
         this.resetBall(data.roomName);
         this.resetPlayers(data.roomName);
         if (
-          this.roomData.get(data.roomName).player1.score == 10 ||
-          this.roomData.get(data.roomName).player2.score == 10
+          room.player1.score == 10 ||
+          room.player2.score == 10
         ) {
           this.server.to(data.roomName).emit('gameOver', {
             status: 'gameOver',
-            player1: this.roomData.get(data.roomName).player1.score,
-            player2: this.roomData.get(data.roomName).player2.score,
+            player1: room.player1.score,
+            player2: room.player2.score,
           });
-          this.roomData.get(data.roomName).status2 = 'gameOver';
-          clearInterval(this.roomData.get(data.roomName).interval);
+          room.status2 = 'gameOver';
+          clearInterval(room.interval);
           return;
         }
         signalX = Math.random() > 0.5 ? speed : -speed;
         signalY = Math.random() > 0.5 ? speed : -speed;
       }
-      this.roomData.get(data.roomName).ball.position.x += signalX;
-      this.roomData.get(data.roomName).ball.position.y += signalY;
+      room.ball.position.x += signalX;
+      room.ball.position.y += signalY;
     }, time);
   }
 
@@ -336,33 +336,33 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
 
     if (!room || !roomName || !socketId) return;
 
-    if (socketId == this.roomData.get(roomName).player1.socketId) {
-      if (right && this.roomData.get(roomName).player1.position.x + 3 < w)
-        this.roomData.get(roomName).player1.position.x += 3;
-      else if (left && this.roomData.get(roomName).player1.position.x - 3 > -w)
-        this.roomData.get(roomName).player1.position.x -= 3;
+    if (socketId == room.player1.socketId) {
+      if (right && room.player1.position.x + 3 < w)
+        room.player1.position.x += 3;
+      else if (left && room.player1.position.x - 3 > -w)
+        room.player1.position.x -= 3;
       players.push(
-        this.roomData.get(roomName).player1.position,
-        this.roomData.get(data.roomName).player2.position,
+        room.player1.position,
+        room.player2.position,
       );
-    } else if (socketId == this.roomData.get(roomName).player2.socketId) {
-      if (right && this.roomData.get(roomName).player2.position.x + 3 < w)
-        this.roomData.get(roomName).player2.position.x += 3;
-      else if (left && this.roomData.get(roomName).player2.position.x - 3 > -w)
-        this.roomData.get(roomName).player2.position.x -= 3;
+    } else if (socketId == room.player2.socketId) {
+      if (right && room.player2.position.x + 3 < w)
+        room.player2.position.x += 3;
+      else if (left && room.player2.position.x - 3 > -w)
+        room.player2.position.x -= 3;
       players.push(
-        this.roomData.get(data.roomName).player1.position,
-        this.roomData.get(roomName).player2.position,
+        room.player1.position,
+        room.player2.position,
       );
     }
     this.server.to(roomName).emit('gameData', {
       status: 'start',
-      ball: this.roomData.get(data.roomName).ball.position,
+      ball: room.ball.position,
       player1: players[0],
       player2: players[1],
       score: {
-        player1: this.roomData.get(data.roomName).player1.score,
-        player2: this.roomData.get(data.roomName).player2.score,
+        player1: room.player1.score,
+        player2: room.player2.score,
       },
     });
   }
@@ -399,12 +399,14 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   }
 
   resetBall(roomName: string) {
-    this.roomData.get(roomName).ball.position.x = 0;
-    this.roomData.get(roomName).ball.position.y = 0;
+    const room = this.roomData.get(roomName)
+    room.ball.position.x = 0;
+    room.ball.position.y = 0;
   }
 
   resetPlayers(roomName: string) {
-    this.roomData.get(roomName).player1.position.x = 0;
-    this.roomData.get(roomName).player2.position.x = 0;
+    const room = this.roomData.get(roomName);
+    room.player1.position.x = 0;
+    room.player2.position.x = 0;
   }
 }
