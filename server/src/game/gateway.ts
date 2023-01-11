@@ -34,6 +34,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   }
 
   handleDisconnect(socket: Socket) {
+    /// REMOVE WATCHERS !!!!!!!!!!
     for (let [key, value] of this.roomData) {
       if (socket.id == value?.player1?.socketId) {
         if (value?.status2 == 'pending') {
@@ -118,13 +119,13 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
       });
     }
     // If one of the watchers leave
-    this.roomData.set(this.roomName, {
-      watchers: room.watchers.filter((e: string) => e != socket.id),
-    });
+    let tmp = room.watchers.filter((e: string) => e != socket.id);
+    this.roomData.set(this.roomName, { ...room, watchers: [...tmp] });
     socket.leave(roomName);
     return socket.to(roomName).emit('watcher', {
       socketId: socket.id,
       type: 'LEAVE',
+      watchersRoom: [...tmp],
     });
   }
 
