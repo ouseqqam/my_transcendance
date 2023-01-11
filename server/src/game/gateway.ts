@@ -68,16 +68,13 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   @SubscribeMessage('joinToRoom')
   JoinToRoom(@MessageBody() data: gameDto, @ConnectedSocket() socket: Socket) {
     const roomName = data.roomName;
-    console.log('name', roomName);
     const room = this.roomData.get(data.roomName);
-    console.log('ARRAY', room);
     if (!room || room.status2 == 'gameOver') return socket.emit('error');
     if (
       room.player1.socketId != socket.id &&
       room.player2.socketId != socket.id &&
       !room.watchers.includes(socket.id)
     ) {
-      console.log('Dkhalt');
       this.roomData.get(data.roomName).watchers.push(socket.id);
       socket.join(data.roomName);
       this.server.to(roomName).emit('watcher', {
@@ -97,10 +94,8 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
 
     const room = this.roomData.get(roomName);
     if (!room) return socket.emit('error');
-    console.log('LEFTROOM', socket.id, room);
     // If one of the players leave
     if (room.player1.socketId == socket.id) {
-      socket.leave(roomName);
       this.roomData?.delete(roomName);
       return socket.to(roomName).emit('leftGame', {
         status: 'gameOver',
@@ -109,9 +104,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
       });
     }
     if (room.player2.socketId == socket.id) {
-      socket.leave(roomName);
       this.roomData?.delete(roomName);
-      console.log('PLAYER2 khroj t9awd');
       return socket.to(roomName).emit('leftGame', {
         status: 'gameOver',
         player1: room.player1.socketId,
