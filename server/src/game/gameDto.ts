@@ -12,8 +12,10 @@ export class gameDto {
     right?: boolean
     @IsBoolean()
     left?: boolean
-    @IsBoolean()
+    @IsString()
     dificulty: string
+    @IsString()
+    status: string
 }
 
 export type postion = {

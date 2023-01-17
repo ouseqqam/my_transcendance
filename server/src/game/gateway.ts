@@ -1,4 +1,3 @@
-import { Body } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -203,7 +202,9 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
     const roomName = data.roomName;
     const id = 1;
     const player1 = room.player1
+    const status = data.status
     if (!room || !roomName || id !== room.player2) return;
+    if (!status || status !== 'accept') return
     socket.join(roomName)
     this.roomData.set(roomName, {
       player1,
@@ -214,7 +215,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
       },
       watchers: [],
       interval: 0
-    });
+    })
   }
   
   @SubscribeMessage('startGame')
