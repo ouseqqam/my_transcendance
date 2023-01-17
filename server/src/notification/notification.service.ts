@@ -33,7 +33,7 @@ export class NotificationService {
             })
         )
 
-      const result = notifications.map((notification, index) => {
+        const result = notifications.map((notification, index) => {
             return {
                 senderName : senderNames[index],
                 type: notification.type,

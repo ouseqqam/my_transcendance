@@ -47,7 +47,7 @@ export class NotificationGateway  implements OnGatewayConnection {
       const senderId = 3
       if (!roomId || !receiverId || !senderId || !type)
         return
-      if (type != 'chat' && type != 'game' && type != 'friendRequest')
+      if (type !== 'chat' && type !== 'game' && type !== 'friendRequest')
         return
       const sockets = this.userSocket.get(receiverId)
       if (sockets) {
@@ -58,7 +58,7 @@ export class NotificationGateway  implements OnGatewayConnection {
             senderId
           })
         })
-        if (type == 'chat' || type == 'friendRequest') {
+        if (type === 'chat' || type === 'friendRequest') {
           console.log('create notification')
           await this.prisma.notification.create({
             data: {
