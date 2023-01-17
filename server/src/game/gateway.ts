@@ -9,7 +9,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { ball, player1, player2, stage } from './data';
+import { ball, player1, stage } from './data';
 import { gameDto } from './gameDto';
 
 @WebSocketGateway({
@@ -169,8 +169,6 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
           status2: 'pending',
           ...this.roomData.get(this.roomName),
           player2: data.receiverId,
-          watchers: [],
-          interval: 0,
         });
         this.count = -1;
         return;
@@ -201,21 +199,24 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
 
   @SubscribeMessage('acceptGame')
   acceptGame(@MessageBody() data: gameDto, @ConnectedSocket() socket: Socket) {
-    let room = this.roomData.get(data.roomName);
-    let roomName = data.roomName;
-    let player2Id = room.player2.socketId;
-    let id = 1;
-    if (!room || !roomName || player2Id != room.player2) return;
-    this.roomData.set(data.roomName, {
-      ...this.roomData.get(data.roomName),
+    const room = this.roomData.get(data.roomName);
+    const roomName = data.roomName;
+    const id = 1;
+    const player1 = room.player1
+    if (!room || !roomName || id !== room.player2) return;
+    socket.join(roomName)
+    this.roomData.set(roomName, {
+      player1,
       player2: {
         socketId: socket.id,
         score: 0,
         position: { x: 0, y: 60 / 2 - 3, z: 0 },
       },
+      watchers: [],
+      interval: 0
     });
   }
-  // i need to clean thios code
+  
   @SubscribeMessage('startGame')
   startGame(@MessageBody() data: gameDto) {
     const room = this.roomData.get(data.roomName);
