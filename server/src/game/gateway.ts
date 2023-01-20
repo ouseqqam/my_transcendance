@@ -22,9 +22,9 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
-  count = 0;
+  count = 0
   roomData = new Map<string, any>()
-  roomName = '';
+  roomName = ''
 
   afterInit() {
     // console.log("init")
@@ -66,26 +66,7 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
     }
   }
 
-  @SubscribeMessage('joinToRoom')
-  JoinToRoom(@MessageBody() data: gameDto, @ConnectedSocket() socket: Socket) {
-    const roomName = data.roomName;
-    const room = this.roomData.get(data.roomName);
-    if (!room || room.status2 == 'gameOver') return socket.emit('error');
-    if (
-      room.player1.socketId != socket.id &&
-      room.player2.socketId != socket.id &&
-      !room.watchers.includes(socket.id)
-    ) {
-      this.roomData.get(data.roomName).watchers.push(socket.id);
-      socket.join(data.roomName);
-      this.server.to(roomName).emit('watcher', {
-        socketId: socket.id,
-        roomName,
-        watchersRoom: room.watchers,
-      });
-    }
-  }
-  // if the user change the page in the front side we must kick it from the room
+
   @SubscribeMessage('leftRoom')
   leftRoom(
     @MessageBody() data: { roomName: string },
@@ -124,8 +105,8 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   }
 
   @SubscribeMessage('findGame')
-  reqToJoin(@ConnectedSocket() socket: Socket, @MessageBody() data: gameDto) {
-    this.gameService.reqToJoin(socket, data, this.server)
+  findGame(@ConnectedSocket() socket: Socket, @MessageBody() data: gameDto) {
+    this.gameService.findGame(socket, data, this.server, this.roomData)
   }
 
   @SubscribeMessage('acceptGame')
@@ -152,11 +133,17 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   
   @SubscribeMessage('startGame')
   startGame(@MessageBody() data: gameDto) {
-    this.gameService.startGame(data, this.server)
+    this.gameService.startGame(data, this.server, this.roomData)
   }
 
   @SubscribeMessage('paddleMove')
   paddleMove(@MessageBody() data: gameDto) {
-    this.gameService.paddleMove(data, this.server)
+    this.gameService.paddleMove(data, this.server, this.roomData)
   }
+
+  @SubscribeMessage('joinToRoom')
+  JoinToRoom(@MessageBody() data: gameDto, @ConnectedSocket() socket: Socket) {
+    this.gameService.JoinToRoom(data, this.roomData,socket, this.server)
+  }
+  
 }

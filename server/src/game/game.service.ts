@@ -41,24 +41,25 @@ export class GameService {
         }
     }
     
-    resetBall(roomName: string) {
-        const room = this.roomData.get(roomName);
+    resetBall(roomName: string, roomData) {
+        const room = roomData.get(roomName);
         room.ball.position.x = 0;
         room.ball.position.y = 0;
     }
     
-    resetPlayers(roomName: string) {
-        const room = this.roomData.get(roomName);
+    resetPlayers(roomName: string, roomData) {
+        const room = roomData.get(roomName);
         room.player1.position.x = 0;
         room.player2.position.x = 0;
     }
-    reqToJoin(socket, data, server) {
+
+    findGame(socket, data, server, roomData) {
         let exist = 0;
         if (this.count == 0) {
           this.roomName =
             Math.random().toString(36).substring(2) +
             new Date().getTime().toString(36);
-          this.roomData.set(this.roomName, {
+          roomData.set(this.roomName, {
             ball: {
               position: { x: 0, y: 0, z: 1 },
               args: [1, 100, 100],
@@ -67,7 +68,7 @@ export class GameService {
         }
     
         //check if socket already in room
-        for (let [key, value] of this.roomData) {
+        for (let [key, value] of roomData) {
           if (
             socket.id == value?.player1?.socketId ||
             socket.id == value?.player2?.socketId
@@ -83,8 +84,8 @@ export class GameService {
         socket.join(this.roomName);
     
         if (this.count == 0 && exist == 0) {
-          this.roomData.set(this.roomName, {
-            ...this.roomData.get(this.roomName),
+          roomData.set(this.roomName, {
+            ...roomData.get(this.roomName),
             player1: {
               socketId: socket.id,
               score: 0,
@@ -92,20 +93,20 @@ export class GameService {
             },
           });
           if (data && data.receiverId) {
-            this.roomData.set(this.roomName, {
+            roomData.set(this.roomName, {
               status: 'private',
               status2: 'pending',
-              ...this.roomData.get(this.roomName),
+              ...roomData.get(this.roomName),
               player2: data.receiverId,
             });
             this.count = -1;
             return;
           }
         } else if (this.count == 1 && exist == 0) {
-          this.roomData.set(this.roomName, {
+          roomData.set(this.roomName, {
             status: 'public',
             status2: 'pending',
-            ...this.roomData.get(this.roomName),
+            ...roomData.get(this.roomName),
             player2: {
               socketId: socket.id,
               score: 0,
@@ -118,15 +119,15 @@ export class GameService {
           server.to(this.roomName).emit('joinRoom', {
             status: 'pending',
             roomName: this.roomName,
-            player1: this.roomData.get(this.roomName).player1.socketId,
-            player2: this.roomData.get(this.roomName).player2.socketId,
+            player1: roomData.get(this.roomName).player1.socketId,
+            player2: roomData.get(this.roomName).player2.socketId,
           });
         }
         this.count++;
     }
 
-    startGame(data, server) {
-        const room = this.roomData.get(data.roomName);
+    startGame(data, server, roomData) {
+        const room = roomData.get(data.roomName);
         const roomName = data.roomName;
         const speed = 0.5;
         let time = 20;
@@ -190,8 +191,8 @@ export class GameService {
           ) {
             if (room.ball.position.y > 0) room.player1.score++;
             else if (room.ball.position.y < 0) room.player2.score++;
-            this.resetBall(data.roomName);
-            this.resetPlayers(data.roomName);
+            this.resetBall(data.roomName, roomData);
+            this.resetPlayers(data.roomName, roomData);
             if (room.player1.score == 10 || room.player2.score == 10) {
               server.to(data.roomName).emit('gameOver', {
                 status: 'gameOver',
@@ -210,9 +211,9 @@ export class GameService {
         }, time);
     }
 
-    paddleMove( data: gameDto, server) {
+    paddleMove( data, server, roomData) {
         const roomName = data.roomName;
-        const room = this.roomData.get(roomName);
+        const room = roomData.get(roomName);
         const socketId = data.socketId;
         const right = data.right;
         const left = data.left;
@@ -244,5 +245,24 @@ export class GameService {
                 player2: room.player2.score,
             },
         });
-  }    
+    }
+
+    JoinToRoom(data, roomData,  socket, server) {
+        const roomName = data.roomName;
+        const room = roomData.get(data.roomName);
+        if (!room || room.status2 == 'gameOver') return socket.emit('error');
+        if (
+          room.player1.socketId != socket.id &&
+          room.player2.socketId != socket.id &&
+          !room.watchers.includes(socket.id)
+        ) {
+          room.watchers.push(socket.id);
+          socket.join(data.roomName);
+          server.to(roomName).emit('watcher', {
+            socketId: socket.id,
+            roomName,
+            watchersRoom: room.watchers,
+          });
+        }
+      }
 }
