@@ -7,17 +7,20 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+
 import { Server, Socket } from 'socket.io';
-import { ball, player1, stage } from './data';
-import { GameService } from './game.service';
-import { gameDto } from './gameDto';
+
+import { GameService } from './game/game.service';
+
+import { gameDto } from './game/gameDto';
 
 @WebSocketGateway({
   cors: {
     origin: '*',
   },
 })
-export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
+
+export class Gateway implements OnGatewayInit, OnGatewayConnection {
   constructor(private gameService: GameService) {}
   @WebSocketServer()
   server: Server;
@@ -145,5 +148,5 @@ export class Mygeteway implements OnGatewayInit, OnGatewayConnection {
   JoinToRoom(@MessageBody() data: gameDto, @ConnectedSocket() socket: Socket) {
     this.gameService.JoinToRoom(data, this.roomData,socket, this.server)
   }
-  
+
 }

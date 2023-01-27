@@ -5,9 +5,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 // import { FriendModule } from './friend/friend.module';
 // import { InvitationModule } from './invitation/invitation.module';
-import { GatwayModule } from './game/gateway.module';
 // import { NotificationModule } from './notification/notification.module';
 import { ChatModule } from './chat/chat.module';
+import { Gateway } from './gateway';
+import { GameService } from './game/game.service';
 
 @Module({
   imports: [
@@ -19,10 +20,10 @@ import { ChatModule } from './chat/chat.module';
      PrismaModule,
     // FriendModule,
     // InvitationModule,
-    GatwayModule,
     ChatModule,
     // NotificationModule,
   ],
-  //  providers: [UserService, FriendService],
+   providers: [GameService, Gateway],
 })
+
 export class AppModule {}

@@ -7,7 +7,6 @@ import { ball, player1, stage } from './data'
 export class GameService {
 
     count = 0
-    roomData = new Map<string, any>()
     roomName = ''
 
     ballIntersectWall(ball1: any, signalX: number) {
@@ -54,7 +53,8 @@ export class GameService {
     }
 
     findGame(socket, data, server, roomData) {
-        let exist = 0;
+      console.log(data)
+        let exist = 0
         if (this.count == 0) {
           this.roomName =
             Math.random().toString(36).substring(2) +
@@ -121,7 +121,7 @@ export class GameService {
             roomName: this.roomName,
             player1: roomData.get(this.roomName).player1.socketId,
             player2: roomData.get(this.roomName).player2.socketId,
-          });
+          })
         }
         this.count++;
     }
